@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Commerce — Eletrônicos Usados</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#2563EB',
+            accent: '#F97316',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="#" class="text-2xl font-extrabold text-brand">
+        Express<span class="text-accent">Commerce</span>
+      </a>
+
+      <!-- Nav -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+        <a href="#" class="hover:text-brand transition-colors">Home</a>
+        <a href="#categorias" class="hover:text-brand transition-colors">Categorias</a>
+        <a href="#" class="hover:text-brand transition-colors">Vender</a>
+        <a href="#" class="bg-brand text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Entrar</a>
+      </nav>
+
+      <!-- Cart -->
+      <div class="relative cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-600 hover:text-brand transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.4 7h12.8M7 13H5.4M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
+        </svg>
+        <span class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">3</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-20 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+        Eletrônicos usados com<br/><span class="text-orange-400">preço justo e segurança</span>
+      </h1>
+      <p class="text-blue-100 text-lg mb-8">Compre e venda celulares, notebooks, games e muito mais.</p>
+
+      <!-- Search bar -->
+      <div class="flex items-center bg-white rounded-xl overflow-hidden shadow-lg max-w-xl mx-auto">
+        <input
+          type="text"
+          placeholder="Buscar produto, marca ou categoria..."
+          class="flex-1 px-5 py-4 text-gray-800 text-sm outline-none"
+        />
+        <button class="bg-accent hover:bg-orange-500 transition-colors text-white px-6 py-4 font-semibold text-sm">
+          Buscar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIAS -->
+  <section id="categorias" class="max-w-7xl mx-auto px-4 py-14">
+    <h2 class="text-2xl font-bold mb-8 text-gray-800">Categorias</h2>
+    <div class="grid grid-cols-3 sm:grid-cols-6 gap-4 text-center">
+
+      <!-- Celulares -->
+      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
+        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-gray-700">Celulares</span>
+      </a>
+
+      <!-- Notebooks -->
+      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
+        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-gray-700">Notebooks</span>
+      </a>
+
+      <!-- Tablets -->
+      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
+        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-gray-700">Tablets</span>
+      </a>
+
+      <!-- Games -->
+      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
+        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-gray-700">Games</span>
+      </a>
+
+      <!-- Áudio -->
+      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
+        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-gray-700">Áudio</span>
+      </a>
+
+      <!-- Câmeras -->
+      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
+        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <span class="text-sm font-medium text-gray-700">Câmeras</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- PRODUTOS -->
+  <section class="max-w-7xl mx-auto px-4 pb-16">
+    <h2 class="text-2xl font-bold mb-8 text-gray-800">Produtos em destaque</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+
+      <!-- Card 1 -->
+      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
+        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=iPhone+13" alt="iPhone 13" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-800 mb-1">iPhone 13 128GB — Meia-noite</h3>
+          <p class="text-accent font-bold text-xl mb-1">R$ 2.499,00</p>
+          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            São Paulo, SP
+          </p>
+          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
+        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=MacBook+Air" alt="MacBook Air" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-800 mb-1">MacBook Air M1 8GB 256GB</h3>
+          <p class="text-accent font-bold text-xl mb-1">R$ 5.800,00</p>
+          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Curitiba, PR
+          </p>
+          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
+        <img src="https://placehold.co/400x240/fff7ed/F97316?text=PS5" alt="PS5" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-800 mb-1">PlayStation 5 + 2 Controles</h3>
+          <p class="text-accent font-bold text-xl mb-1">R$ 3.200,00</p>
+          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Rio de Janeiro, RJ
+          </p>
+          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
+        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=Galaxy+Tab" alt="Galaxy Tab" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-800 mb-1">Samsung Galaxy Tab S7 — 128GB</h3>
+          <p class="text-accent font-bold text-xl mb-1">R$ 1.850,00</p>
+          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Belo Horizonte, MG
+          </p>
+          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
+        <img src="https://placehold.co/400x240/fff7ed/F97316?text=Sony+WH-1000XM5" alt="Sony WH-1000XM5" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-800 mb-1">Sony WH-1000XM5 — Noise Cancelling</h3>
+          <p class="text-accent font-bold text-xl mb-1">R$ 1.100,00</p>
+          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Porto Alegre, RS
+          </p>
+          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
+        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=Canon+EOS+R50" alt="Canon EOS R50" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+        <div class="p-4">
+          <h3 class="font-semibold text-gray-800 mb-1">Canon EOS R50 + Lente 18-45mm</h3>
+          <p class="text-accent font-bold text-xl mb-1">R$ 4.300,00</p>
+          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Recife, PE
+          </p>
+          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-gray-900 text-gray-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <div>
+        <p class="text-white text-lg font-extrabold mb-2">Express<span class="text-accent">Commerce</span></p>
+        <p class="text-gray-500 text-xs leading-relaxed">O marketplace de eletrônicos usados com mais segurança e praticidade do Brasil.</p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-3">Links rápidos</p>
+        <ul class="space-y-2">
+          <li><a href="#" class="hover:text-white transition-colors">Home</a></li>
+          <li><a href="#categorias" class="hover:text-white transition-colors">Categorias</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Vender</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Entrar</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-3">Suporte</p>
+        <ul class="space-y-2">
+          <li><a href="#" class="hover:text-white transition-colors">Central de Ajuda</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Política de Privacidade</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Termos de Uso</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Fale Conosco</a></li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="border-t border-gray-800 text-center py-4 text-xs text-gray-600">
+      &copy; 2026 ExpressCommerce. Todos os direitos reservados.
+    </div>
+  </footer>
+
+</body>
+</html>
