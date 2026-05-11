@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta
+
 import pytest
 
 from src.cart import ShoppingCart
-from src.models import Product
+from src.models import Coupon, Product
 
 
 def make_product(product_id: int, price: float, name: str = "Produto") -> Product:
@@ -16,6 +18,34 @@ def make_product(product_id: int, price: float, name: str = "Produto") -> Produc
         A validated Product instance.
     """
     return Product(id=product_id, name=name, price=price)
+
+
+def make_coupon(
+    code: str = "SAVE10",
+    discount_percent: float = 10,
+    min_purchase: float = 0,
+    is_active: bool = True,
+    expires_at: datetime | None = None,
+) -> Coupon:
+    """Create a coupon instance for test scenarios.
+
+    Args:
+        code: Coupon code.
+        discount_percent: Percentual value of the coupon discount.
+        min_purchase: Minimum subtotal required to apply the coupon.
+        is_active: Indicates if the coupon is active.
+        expires_at: Coupon expiration datetime.
+
+    Returns:
+        A validated Coupon instance.
+    """
+    return Coupon(
+        code=code,
+        discount_percent=discount_percent,
+        min_purchase=min_purchase,
+        is_active=is_active,
+        expires_at=expires_at,
+    )
 
 
 def test_calculate_total_without_discount_below_threshold() -> None:
@@ -116,3 +146,93 @@ def test_remove_item_removes_product_from_cart() -> None:
     # Assert
     assert items_count == 1
     assert remaining_product_id == 2
+
+
+def test_apply_coupon_percentual_before_progressive_discount() -> None:
+    """Apply coupon first and then progressive discount by threshold."""
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item(make_product(1, 150.0), 4)  # subtotal 600
+    coupon = make_coupon(discount_percent=10)
+
+    # Act
+    cart.apply_coupon(coupon)
+    summary = cart.calculate_summary()
+
+    # Assert
+    assert summary.subtotal == pytest.approx(600.0)
+    assert summary.coupon_discount == pytest.approx(60.0)
+    assert summary.progressive_discount == pytest.approx(54.0)
+    assert summary.total == pytest.approx(486.0)
+
+
+def test_apply_coupon_raises_for_inactive_coupon() -> None:
+    """Reject coupon application when coupon is inactive."""
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item(make_product(1, 100.0), 2)
+    coupon = make_coupon(is_active=False)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="inactive"):
+        cart.apply_coupon(coupon)
+
+
+def test_apply_coupon_raises_for_expired_coupon() -> None:
+    """Reject coupon application when expiration datetime is in the past."""
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item(make_product(1, 100.0), 2)
+    reference_datetime = datetime.now()
+    coupon = make_coupon(expires_at=reference_datetime - timedelta(days=1))
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="expired"):
+        cart.apply_coupon(coupon, reference_datetime=reference_datetime)
+
+
+def test_apply_coupon_raises_when_subtotal_below_min_purchase() -> None:
+    """Reject coupon application when cart subtotal is below minimum purchase."""
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item(make_product(1, 100.0), 1)
+    coupon = make_coupon(min_purchase=200)
+
+    # Act / Assert
+    with pytest.raises(ValueError, match="below"):
+        cart.apply_coupon(coupon)
+
+
+def test_calculate_summary_ignores_coupon_when_cart_drops_below_minimum() -> None:
+    """Ignore an applied coupon when current subtotal no longer meets minimum."""
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item(make_product(1, 250.0), 2)  # subtotal 500
+    coupon = make_coupon(discount_percent=10, min_purchase=500)
+    cart.apply_coupon(coupon)
+    cart.remove_item(1)  # subtotal 0
+
+    # Act
+    summary = cart.calculate_summary()
+
+    # Assert
+    assert summary.subtotal == pytest.approx(0.0)
+    assert summary.coupon_discount == pytest.approx(0.0)
+    assert summary.progressive_discount == pytest.approx(0.0)
+    assert summary.total == pytest.approx(0.0)
+
+
+def test_remove_coupon_restores_progressive_only_calculation() -> None:
+    """Restore progressive-only totals after removing a previously applied coupon."""
+    # Arrange
+    cart = ShoppingCart()
+    cart.add_item(make_product(1, 120.0), 5)  # subtotal 600
+    coupon = make_coupon(discount_percent=10)
+    cart.apply_coupon(coupon)
+
+    # Act
+    cart.remove_coupon()
+    total = cart.calculate_total_with_discount()
+
+    # Assert
+    assert total == pytest.approx(540.0)

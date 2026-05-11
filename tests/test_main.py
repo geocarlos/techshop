@@ -1,0 +1,121 @@
+from typing import Generator
+
+from fastapi.testclient import TestClient
+import pytest
+
+from src.main import app, cart
+from src.models import Product
+
+
+@pytest.fixture(autouse=True)
+def reset_cart_state() -> Generator[None, None, None]:
+    """Reset global cart state before and after each API test."""
+    # Arrange
+    cart.items = []
+    cart.remove_coupon()
+
+    # Act
+    yield
+
+    # Assert
+    cart.items = []
+    cart.remove_coupon()
+
+
+@pytest.fixture
+def client() -> TestClient:
+    """Provide a FastAPI TestClient instance."""
+    # Arrange / Act / Assert
+    return TestClient(app)
+
+
+def test_read_root_returns_ok_status(client: TestClient) -> None:
+    """Return application health status on root endpoint."""
+    # Arrange
+
+    # Act
+    response = client.get("/")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+
+
+def test_get_cart_summary_returns_zeroed_totals_for_empty_cart(client: TestClient) -> None:
+    """Return zeroed summary when the cart has no items."""
+    # Arrange
+
+    # Act
+    response = client.get("/cart/summary")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "subtotal": 0.0,
+        "coupon_discount": 0.0,
+        "progressive_discount": 0.0,
+        "total": 0.0,
+    }
+
+
+def test_apply_coupon_returns_not_found_for_unknown_code(client: TestClient) -> None:
+    """Return 404 when trying to apply a non-existing coupon code."""
+    # Arrange
+
+    # Act
+    response = client.post("/cart/apply-coupon", json={"code": "NOPE"})
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Coupon not found"}
+
+
+def test_apply_coupon_returns_bad_request_when_subtotal_below_minimum(client: TestClient) -> None:
+    """Return 400 when cart subtotal is below coupon minimum purchase."""
+    # Arrange
+
+    # Act
+    response = client.post("/cart/apply-coupon", json={"code": "SAVE10"})
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Cart subtotal is below coupon minimum purchase"}
+
+
+def test_apply_coupon_returns_updated_summary_with_coupon_and_progressive(
+    client: TestClient,
+) -> None:
+    """Apply coupon and return summary using coupon then progressive discount order."""
+    # Arrange
+    cart.add_item(Product(id=1, name="Notebook", price=200.0), 3)  # subtotal 600
+
+    # Act
+    response = client.post("/cart/apply-coupon", json={"code": "SAVE10"})
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["subtotal"] == pytest.approx(600.0)
+    assert payload["coupon_discount"] == pytest.approx(60.0)
+    assert payload["progressive_discount"] == pytest.approx(54.0)
+    assert payload["total"] == pytest.approx(486.0)
+
+
+def test_remove_coupon_returns_summary_without_coupon_discount(client: TestClient) -> None:
+    """Remove previously applied coupon and keep only progressive discount."""
+    # Arrange
+    cart.add_item(Product(id=1, name="Notebook", price=200.0), 3)  # subtotal 600
+    apply_response = client.post("/cart/apply-coupon", json={"code": "SAVE10"})
+    assert apply_response.status_code == 200
+
+    # Act
+    response = client.delete("/cart/coupon")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "subtotal": 600.0,
+        "coupon_discount": 0.0,
+        "progressive_discount": 60.0,
+        "total": 540.0,
+    }
