@@ -1,268 +1,781 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Express Commerce — Eletrônicos Usados</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Express Commerce - Marketplace Online</title>
+  <meta name="description" content="Express Commerce - Encontre os melhores produtos com os melhores preços. Eletrônicos, Moda, Casa, Esportes e muito mais.">
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Scripts de integração com backend -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/cart.js"></script>
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: '#2563EB',
-            accent: '#F97316',
-          }
-        }
-      }
+            background: '#0a0a0a',
+            foreground: '#fafafa',
+            card: '#141414',
+            'card-foreground': '#fafafa',
+            primary: '#dc2626',
+            'primary-foreground': '#fafafa',
+            secondary: '#262626',
+            'secondary-foreground': '#fafafa',
+            muted: '#1a1a1a',
+            'muted-foreground': '#a3a3a3',
+            accent: '#ef4444',
+            'accent-foreground': '#fafafa',
+            border: '#262626',
+            ring: '#dc2626',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        },
+      },
     }
   </script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0a0a0a;
+      color: #fafafa;
+    }
+    
+    .carousel-container {
+      overflow: hidden;
+    }
+    
+    .carousel-track {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+    
+    .carousel-slide {
+      min-width: 100%;
+    }
+    
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.15);
+    }
+    
+    .product-card:hover {
+      transform: translateY(-2px);
+      border-color: #dc2626;
+    }
+    
+    .product-card, .category-card {
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3);
+    }
+
+    .btn-primary:hover {
+      background-color: #b91c1c;
+    }
+
+    .carousel-dot.active {
+      background-color: #dc2626;
+    }
+  </style>
 </head>
-<body class="bg-white text-gray-800 font-sans">
-
-  <!-- HEADER -->
-  <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <!-- Logo -->
-      <a href="#" class="text-2xl font-extrabold text-brand">
-        Express<span class="text-accent">Commerce</span>
-      </a>
-
-      <!-- Nav -->
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-        <a href="#" class="hover:text-brand transition-colors">Home</a>
-        <a href="#categorias" class="hover:text-brand transition-colors">Categorias</a>
-        <a href="#" class="hover:text-brand transition-colors">Vender</a>
-        <a href="#" class="bg-brand text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Entrar</a>
-      </nav>
-
-      <!-- Cart -->
-      <div class="relative cursor-pointer">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-600 hover:text-brand transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.4 7h12.8M7 13H5.4M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
-        </svg>
-        <span class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">3</span>
+<body class="min-h-screen">
+  <!-- Header -->
+  <header class="sticky top-0 z-50 bg-card border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+      <div class="flex items-center justify-between gap-4">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2 shrink-0">
+          <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-foreground hidden sm:block">Express<span class="text-primary">Commerce</span></span>
+        </a>
+        
+        <!-- Search Bar -->
+        <div class="flex-1 max-w-2xl">
+          <div class="relative">
+            <input 
+              type="text" 
+              placeholder="Buscar produtos, marcas e muito mais..." 
+              class="search-input w-full bg-secondary border border-border rounded-lg py-2.5 px-4 pr-12 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-all"
+            >
+            <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary hover:bg-primary/90 text-white p-1.5 rounded-md transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- User Actions -->
+        <div class="flex items-center gap-2 sm:gap-4">
+          <a href="#" class="hidden md:flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="text-sm">Entrar</span>
+          </a>
+          <a href="#" class="hidden md:flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+            <span class="text-sm">Criar conta</span>
+          </a>
+          <a href="#" class="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          </a>
+          <a href="#" class="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">3</span>
+          </a>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- HERO -->
-  <section class="bg-gradient-to-br from-blue-600 to-blue-800 text-white py-20 px-4">
-    <div class="max-w-3xl mx-auto text-center">
-      <h1 class="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-        Eletrônicos usados com<br/><span class="text-orange-400">preço justo e segurança</span>
-      </h1>
-      <p class="text-blue-100 text-lg mb-8">Compre e venda celulares, notebooks, games e muito mais.</p>
-
-      <!-- Search bar -->
-      <div class="flex items-center bg-white rounded-xl overflow-hidden shadow-lg max-w-xl mx-auto">
-        <input
-          type="text"
-          placeholder="Buscar produto, marca ou categoria..."
-          class="flex-1 px-5 py-4 text-gray-800 text-sm outline-none"
-        />
-        <button class="bg-accent hover:bg-orange-500 transition-colors text-white px-6 py-4 font-semibold text-sm">
-          Buscar
+  <main>
+    <!-- Carousel Banner -->
+    <section class="relative bg-card">
+      <div class="carousel-container max-w-7xl mx-auto">
+        <div class="carousel-track" id="carouselTrack">
+          <!-- Slide 1 -->
+          <div class="carousel-slide">
+            <div class="relative h-48 sm:h-64 md:h-80 bg-gradient-to-r from-primary/20 via-card to-accent/10 flex items-center">
+              <div class="max-w-7xl mx-auto px-4 w-full">
+                <div class="max-w-lg">
+                  <span class="inline-block bg-primary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full mb-3">OFERTA RELÂMPAGO</span>
+                  <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">Até 60% OFF em Eletrônicos</h2>
+                  <p class="text-muted-foreground mb-4 text-sm sm:text-base">Smartphones, notebooks e muito mais com os melhores preços.</p>
+                  <button class="btn-primary bg-primary text-white px-6 py-2.5 rounded-lg font-semibold transition-colors">Ver ofertas</button>
+                </div>
+              </div>
+              <div class="absolute right-8 top-1/2 -translate-y-1/2 hidden lg:block">
+                <div class="w-48 h-48 bg-gradient-to-br from-primary/30 to-accent/20 rounded-full blur-3xl"></div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 2 -->
+          <div class="carousel-slide">
+            <div class="relative h-48 sm:h-64 md:h-80 bg-gradient-to-r from-accent/20 via-card to-primary/10 flex items-center">
+              <div class="max-w-7xl mx-auto px-4 w-full">
+                <div class="max-w-lg">
+                  <span class="inline-block bg-accent/20 text-accent text-xs font-semibold px-3 py-1 rounded-full mb-3">FRETE GRÁTIS</span>
+                  <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">Moda com Entrega Grátis</h2>
+                  <p class="text-muted-foreground mb-4 text-sm sm:text-base">Roupas, calçados e acessórios para todo o Brasil.</p>
+                  <button class="btn-primary bg-primary text-white px-6 py-2.5 rounded-lg font-semibold transition-colors">Conferir agora</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Slide 3 -->
+          <div class="carousel-slide">
+            <div class="relative h-48 sm:h-64 md:h-80 bg-gradient-to-r from-primary/30 via-card to-secondary flex items-center">
+              <div class="max-w-7xl mx-auto px-4 w-full">
+                <div class="max-w-lg">
+                  <span class="inline-block bg-primary/20 text-primary text-xs font-semibold px-3 py-1 rounded-full mb-3">NOVIDADE</span>
+                  <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-2">Casa e Decoração</h2>
+                  <p class="text-muted-foreground mb-4 text-sm sm:text-base">Renove sua casa com até 40% de desconto.</p>
+                  <button class="btn-primary bg-primary text-white px-6 py-2.5 rounded-lg font-semibold transition-colors">Explorar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Carousel Controls -->
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+          <button class="carousel-dot active w-2 h-2 rounded-full bg-muted-foreground transition-colors" data-slide="0"></button>
+          <button class="carousel-dot w-2 h-2 rounded-full bg-muted-foreground transition-colors" data-slide="1"></button>
+          <button class="carousel-dot w-2 h-2 rounded-full bg-muted-foreground transition-colors" data-slide="2"></button>
+        </div>
+        <button class="absolute left-4 top-1/2 -translate-y-1/2 bg-card/80 hover:bg-card p-2 rounded-full border border-border transition-colors" id="prevBtn">
+          <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <button class="absolute right-4 top-1/2 -translate-y-1/2 bg-card/80 hover:bg-card p-2 rounded-full border border-border transition-colors" id="nextBtn">
+          <svg class="w-5 h-5 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
         </button>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- CATEGORIAS -->
-  <section id="categorias" class="max-w-7xl mx-auto px-4 py-14">
-    <h2 class="text-2xl font-bold mb-8 text-gray-800">Categorias</h2>
-    <div class="grid grid-cols-3 sm:grid-cols-6 gap-4 text-center">
-
-      <!-- Celulares -->
-      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
-        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Celulares</span>
-      </a>
-
-      <!-- Notebooks -->
-      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
-        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Notebooks</span>
-      </a>
-
-      <!-- Tablets -->
-      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
-        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Tablets</span>
-      </a>
-
-      <!-- Games -->
-      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
-        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Games</span>
-      </a>
-
-      <!-- Áudio -->
-      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
-        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Áudio</span>
-      </a>
-
-      <!-- Câmeras -->
-      <a href="#" class="flex flex-col items-center gap-2 p-4 rounded-xl border border-gray-100 hover:border-brand hover:shadow-md transition group">
-        <div class="bg-blue-50 group-hover:bg-blue-100 rounded-full p-3 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-brand" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-          </svg>
-        </div>
-        <span class="text-sm font-medium text-gray-700">Câmeras</span>
-      </a>
-
-    </div>
-  </section>
-
-  <!-- PRODUTOS -->
-  <section class="max-w-7xl mx-auto px-4 pb-16">
-    <h2 class="text-2xl font-bold mb-8 text-gray-800">Produtos em destaque</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-
-      <!-- Card 1 -->
-      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
-        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=iPhone+13" alt="iPhone 13" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800 mb-1">iPhone 13 128GB — Meia-noite</h3>
-          <p class="text-accent font-bold text-xl mb-1">R$ 2.499,00</p>
-          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            São Paulo, SP
-          </p>
-          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+    <!-- Categories -->
+    <section class="py-8 px-4">
+      <div class="max-w-7xl mx-auto">
+        <h2 class="text-xl sm:text-2xl font-bold text-foreground mb-6">Categorias em destaque</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <!-- Category 1 -->
+          <a href="#" class="category-card bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground text-center">Celulares</span>
+          </a>
+          <!-- Category 2 -->
+          <a href="#" class="category-card bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground text-center">Computadores</span>
+          </a>
+          <!-- Category 3 -->
+          <a href="#" class="category-card bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground text-center">Moda</span>
+          </a>
+          <!-- Category 4 -->
+          <a href="#" class="category-card bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground text-center">Casa</span>
+          </a>
+          <!-- Category 5 -->
+          <a href="#" class="category-card bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground text-center">Esportes</span>
+          </a>
+          <!-- Category 6 -->
+          <a href="#" class="category-card bg-card border border-border rounded-xl p-4 flex flex-col items-center gap-3 hover:border-primary">
+            <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center">
+              <svg class="w-7 h-7 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+              </svg>
+            </div>
+            <span class="text-sm font-medium text-foreground text-center">Veículos</span>
+          </a>
         </div>
       </div>
+    </section>
 
-      <!-- Card 2 -->
-      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
-        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=MacBook+Air" alt="MacBook Air" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800 mb-1">MacBook Air M1 8GB 256GB</h3>
-          <p class="text-accent font-bold text-xl mb-1">R$ 5.800,00</p>
-          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Curitiba, PR
-          </p>
-          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+    <!-- Featured Products -->
+    <section class="py-8 px-4 bg-muted">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-foreground">Ofertas do dia</h2>
+          <a href="#" class="text-primary hover:text-accent text-sm font-medium transition-colors">Ver todas</a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <!-- Product Card 1 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&h=300&fit=crop" alt="Smartphone Galaxy" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">-25%</span>
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Smartphone Galaxy S24 Ultra 256GB</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current text-muted-foreground" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(128)</span>
+              </div>
+              <p class="text-xs text-muted-foreground line-through">R$ 7.999,00</p>
+              <p class="text-lg font-bold text-foreground">R$ 5.999,00</p>
+              <p class="text-xs text-accent">em 12x R$ 499,92 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 2 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop" alt="Headphone Premium" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">-40%</span>
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Headphone Bluetooth Premium Noise Cancelling</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(256)</span>
+              </div>
+              <p class="text-xs text-muted-foreground line-through">R$ 899,00</p>
+              <p class="text-lg font-bold text-foreground">R$ 539,00</p>
+              <p class="text-xs text-accent">em 10x R$ 53,90 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 3 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop" alt="Smartwatch Sport" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">-30%</span>
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Smartwatch Sport GPS Monitor Cardíaco</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current text-muted-foreground" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(89)</span>
+              </div>
+              <p class="text-xs text-muted-foreground line-through">R$ 1.299,00</p>
+              <p class="text-lg font-bold text-foreground">R$ 909,00</p>
+              <p class="text-xs text-accent">em 10x R$ 90,90 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 4 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&h=300&fit=crop" alt="Tênis Running" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">-20%</span>
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Tênis Running Performance Ultra Leve</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current text-muted-foreground" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(312)</span>
+              </div>
+              <p class="text-xs text-muted-foreground line-through">R$ 499,00</p>
+              <p class="text-lg font-bold text-foreground">R$ 399,00</p>
+              <p class="text-xs text-accent">em 8x R$ 49,88 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 5 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=300&h=300&fit=crop" alt="Câmera Profissional" class="w-full h-full object-cover">
+              <span class="absolute top-2 left-2 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">-15%</span>
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Câmera Mirrorless 4K Profissional</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(47)</span>
+              </div>
+              <p class="text-xs text-muted-foreground line-through">R$ 4.999,00</p>
+              <p class="text-lg font-bold text-foreground">R$ 4.249,00</p>
+              <p class="text-xs text-accent">em 12x R$ 354,08 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
+    </section>
 
-      <!-- Card 3 -->
-      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
-        <img src="https://placehold.co/400x240/fff7ed/F97316?text=PS5" alt="PS5" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800 mb-1">PlayStation 5 + 2 Controles</h3>
-          <p class="text-accent font-bold text-xl mb-1">R$ 3.200,00</p>
-          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Rio de Janeiro, RJ
-          </p>
-          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+    <!-- Recommendations -->
+    <section class="py-8 px-4">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl sm:text-2xl font-bold text-foreground">Recomendados para você</h2>
+          <a href="#" class="text-primary hover:text-accent text-sm font-medium transition-colors">Ver mais</a>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <!-- Product Card 6 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1593642632559-0c6d3fc62b89?w=300&h=300&fit=crop" alt="MacBook Pro" class="w-full h-full object-cover">
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Notebook Pro M3 14" 512GB SSD</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(184)</span>
+              </div>
+              <p class="text-lg font-bold text-foreground">R$ 12.499,00</p>
+              <p class="text-xs text-accent">em 12x R$ 1.041,58 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 7 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=300&h=300&fit=crop" alt="Tênis Casual" class="w-full h-full object-cover">
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Tênis Casual Couro Premium</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current text-muted-foreground" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(567)</span>
+              </div>
+              <p class="text-lg font-bold text-foreground">R$ 289,00</p>
+              <p class="text-xs text-accent">em 6x R$ 48,17 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 8 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1545127398-14699f92334b?w=300&h=300&fit=crop" alt="Console Gaming" class="w-full h-full object-cover">
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Console Gaming 1TB + 2 Controles</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(892)</span>
+              </div>
+              <p class="text-lg font-bold text-foreground">R$ 3.999,00</p>
+              <p class="text-xs text-accent">em 12x R$ 333,25 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 9 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=300&fit=crop" alt="Bolsa Feminina" class="w-full h-full object-cover">
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Bolsa Feminina Couro Legítimo</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current text-muted-foreground" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(234)</span>
+              </div>
+              <p class="text-lg font-bold text-foreground">R$ 459,00</p>
+              <p class="text-xs text-accent">em 10x R$ 45,90 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Product Card 10 -->
+          <article class="product-card bg-card border border-border rounded-xl overflow-hidden">
+            <div class="relative aspect-square bg-secondary">
+              <img src="https://images.unsplash.com/photo-1585771724684-38269d6639fd?w=300&h=300&fit=crop" alt="Sofá Retrátil" class="w-full h-full object-cover">
+              <button class="absolute top-2 right-2 p-1.5 bg-card/80 rounded-full hover:bg-card transition-colors">
+                <svg class="w-4 h-4 text-muted-foreground hover:text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+              </button>
+            </div>
+            <div class="p-3">
+              <h3 class="text-sm font-medium text-foreground line-clamp-2 mb-2">Sofá Retrátil 3 Lugares Veludo</h3>
+              <div class="flex items-center gap-1 mb-1">
+                <div class="flex text-yellow-500">
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                  <svg class="w-3 h-3 fill-current text-muted-foreground" viewBox="0 0 20 20"><path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/></svg>
+                </div>
+                <span class="text-xs text-muted-foreground">(76)</span>
+              </div>
+              <p class="text-lg font-bold text-foreground">R$ 2.199,00</p>
+              <p class="text-xs text-accent">em 12x R$ 183,25 sem juros</p>
+              <div class="flex items-center gap-1 mt-2">
+                <svg class="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-xs text-green-500 font-medium">Frete grátis</span>
+              </div>
+            </div>
+          </article>
         </div>
       </div>
+    </section>
 
-      <!-- Card 4 -->
-      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
-        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=Galaxy+Tab" alt="Galaxy Tab" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800 mb-1">Samsung Galaxy Tab S7 — 128GB</h3>
-          <p class="text-accent font-bold text-xl mb-1">R$ 1.850,00</p>
-          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Belo Horizonte, MG
-          </p>
-          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+    <!-- Benefits Banner -->
+    <section class="py-8 px-4 bg-card border-t border-border">
+      <div class="max-w-7xl mx-auto">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-foreground">Frete Grátis</p>
+              <p class="text-xs text-muted-foreground">A partir de R$ 199</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-foreground">Compra Segura</p>
+              <p class="text-xs text-muted-foreground">100% protegido</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-foreground">Parcele em 12x</p>
+              <p class="text-xs text-muted-foreground">Sem juros</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+              <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-foreground">Troca Fácil</p>
+              <p class="text-xs text-muted-foreground">30 dias para trocar</p>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
+  </main>
 
-      <!-- Card 5 -->
-      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
-        <img src="https://placehold.co/400x240/fff7ed/F97316?text=Sony+WH-1000XM5" alt="Sony WH-1000XM5" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800 mb-1">Sony WH-1000XM5 — Noise Cancelling</h3>
-          <p class="text-accent font-bold text-xl mb-1">R$ 1.100,00</p>
-          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Porto Alegre, RS
-          </p>
-          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+  <!-- Footer -->
+  <footer class="bg-muted border-t border-border py-8 px-4">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Sobre</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Quem somos</a></li>
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Trabalhe conosco</a></li>
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Ajuda</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Central de ajuda</a></li>
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Trocas e devoluções</a></li>
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Prazos de entrega</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Vendedor</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Venda no Express</a></li>
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Portal do vendedor</a></li>
+            <li><a href="#" class="text-sm text-muted-foreground hover:text-foreground transition-colors">Políticas</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Redes Sociais</h3>
+          <div class="flex gap-3">
+            <a href="#" class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <svg class="w-5 h-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+            <a href="#" class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <svg class="w-5 h-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            </a>
+            <a href="#" class="w-10 h-10 bg-secondary rounded-full flex items-center justify-center hover:bg-primary/20 transition-colors">
+              <svg class="w-5 h-5 text-muted-foreground" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+            </a>
+          </div>
         </div>
       </div>
-
-      <!-- Card 6 -->
-      <div class="border border-gray-200 rounded-2xl overflow-hidden hover:shadow-lg transition group">
-        <img src="https://placehold.co/400x240/e0e7ff/2563EB?text=Canon+EOS+R50" alt="Canon EOS R50" class="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-        <div class="p-4">
-          <h3 class="font-semibold text-gray-800 mb-1">Canon EOS R50 + Lente 18-45mm</h3>
-          <p class="text-accent font-bold text-xl mb-1">R$ 4.300,00</p>
-          <p class="text-gray-400 text-xs flex items-center gap-1 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a2 2 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-            Recife, PE
-          </p>
-          <a href="#" class="block text-center bg-brand hover:bg-blue-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors">Ver mais</a>
+      <div class="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-foreground">Express<span class="text-primary">Commerce</span></span>
         </div>
+        <p class="text-xs text-muted-foreground text-center">&copy; 2024 Express Commerce. Todos os direitos reservados.</p>
       </div>
-
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="bg-gray-900 text-gray-400 text-sm">
-    <div class="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-
-      <div>
-        <p class="text-white text-lg font-extrabold mb-2">Express<span class="text-accent">Commerce</span></p>
-        <p class="text-gray-500 text-xs leading-relaxed">O marketplace de eletrônicos usados com mais segurança e praticidade do Brasil.</p>
-      </div>
-
-      <div>
-        <p class="text-white font-semibold mb-3">Links rápidos</p>
-        <ul class="space-y-2">
-          <li><a href="#" class="hover:text-white transition-colors">Home</a></li>
-          <li><a href="#categorias" class="hover:text-white transition-colors">Categorias</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Vender</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Entrar</a></li>
-        </ul>
-      </div>
-
-      <div>
-        <p class="text-white font-semibold mb-3">Suporte</p>
-        <ul class="space-y-2">
-          <li><a href="#" class="hover:text-white transition-colors">Central de Ajuda</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Política de Privacidade</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Termos de Uso</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Fale Conosco</a></li>
-        </ul>
-      </div>
-
-    </div>
-    <div class="border-t border-gray-800 text-center py-4 text-xs text-gray-600">
-      &copy; 2026 ExpressCommerce. Todos os direitos reservados.
     </div>
   </footer>
 
+  <!-- Carousel Script -->
+  <script>
+    const track = document.getElementById('carouselTrack');
+    const dots = document.querySelectorAll('.carousel-dot');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    let currentSlide = 0;
+    const totalSlides = 3;
+
+    function goToSlide(index) {
+      currentSlide = index;
+      track.style.transform = `translateX(-${currentSlide * 100}%)`;
+      dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentSlide);
+      });
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      goToSlide(currentSlide);
+    }
+
+    function prevSlide() {
+      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+      goToSlide(currentSlide);
+    }
+
+    nextBtn.addEventListener('click', nextSlide);
+    prevBtn.addEventListener('click', prevSlide);
+
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => goToSlide(index));
+    });
+
+    // Auto-play carousel
+    setInterval(nextSlide, 5000);
+  </script>
 </body>
 </html>
