@@ -31,30 +31,51 @@ A aplicação é construída utilizando FastAPI, garantindo alta performance e u
 
 ```
 techshop/
+├── frontend/
+│   └── index.html            # Home mockada em HTML + Tailwind
+├── src/
+│   ├── cart.py              # Lógica de carrinho com cupom
+│   ├── main.py              # API FastAPI
+│   └── models.py            # Modelos Pydantic
+├── tests/
+│   ├── test_cart.py         # Testes unitários do carrinho
+│   └── test_main.py         # Testes de integração da API
 ├── docs/
 │   ├── BACKLOG.md
-│   ├── DIAGRAMAS.md
 │   ├── DIRETRIZES_IA.md
-│   └── PRD.md
-├── src/
-│   ├── cart.py
-│   ├── main.py
-│   └── models.py
+│   ├── PRD.md
+│   ├── INTEGRATION_PLAN.md
+│   ├── plan-expressCommerce.prompt.md
+│   ├── diagrama-er.md
+│   └── diagrama-fluxo.md
 ├── .gitignore
 ├── pyproject.toml
 ├── README.md
 └── uv.lock
 ```
 
--   `src/`: Contém todo o código-fonte da aplicação.
-    -   `main.py`: Ponto de entrada da API FastAPI.
-    -   `models.py`: Definições dos modelos de dados (Product, CartItem) com Pydantic.
-    -   `cart.py`: Lógica de negócio para o carrinho de compras (`ShoppingCart`).
--   `docs/`: Contém a documentação de planejamento do projeto.
-    -   `PRD.md`: Documento de Requisitos do Produto.
-    -   `BACKLOG.md`: User Stories.
-    -   `DIAGRAMAS.md`: Diagrama Entidade-Relacionamento.
-    -   `DIRETRIZES_IA.md`: Diretrizes para desenvolvimento com IA.
+### Descrição dos Diretórios
+
+- `src/`: Código-fonte do backend (FastAPI).
+  - `main.py`: Ponto de entrada da API FastAPI com endpoints de carrinho e cupom.
+  - `models.py`: Modelos Pydantic (Product, CartItem, Coupon, CartSummary).
+  - `cart.py`: Lógica de negócio do carrinho com gerenciamento de cupons.
+
+- `frontend/`: Código-fonte do frontend (mockups iniciais em HTML + Tailwind).
+  - `index.html`: Home page responsiva com barra de busca, categorias e grid de produtos.
+
+- `tests/`: Suíte de testes automatizados.
+  - `test_cart.py`: Testes unitários da lógica de carrinho e cupom (padrão AAA).
+  - `test_main.py`: Testes de integração da API FastAPI.
+
+- `docs/`: Documentação e especificações.
+  - `PRD.md`: Documento de Requisitos do Produto.
+  - `BACKLOG.md`: User Stories.
+  - `DIRETRIZES_IA.md`: Diretrizes para desenvolvimento com IA.
+  - `INTEGRATION_PLAN.md`: Plano de integração entre front-end e back-end.
+  - `plan-expressCommerce.prompt.md`: ADR com recomendações arquiteturais.
+  - `diagrama-er.md`: ER do marketplace de eletrônicos usados.
+  - `diagrama-fluxo.md`: Fluxo de jornada do usuário.
 
 ## Dependências
 
