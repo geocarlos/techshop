@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      PYTEST_ADDOPTS: --cov-fail-under=80
 
     steps:
       - name: Checkout repository
