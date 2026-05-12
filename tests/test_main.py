@@ -217,3 +217,74 @@ def test_search_page_returns_html(client: TestClient) -> None:
     assert response.status_code == 200
     assert "text/html" in response.headers["content-type"]
     assert "MacBook" in response.text
+
+
+def test_checkout_page_redirects_when_cart_is_empty(client: TestClient) -> None:
+    """Redirect checkout access back to cart when there are no items."""
+    # Arrange
+
+    # Act
+    response = client.get("/checkout", follow_redirects=False)
+
+    # Assert
+    assert response.status_code == 303
+    assert response.headers["location"] == "/cart"
+
+
+def test_checkout_page_returns_html_with_cart_summary(client: TestClient) -> None:
+    """Render checkout page when the cart has items."""
+    # Arrange
+    cart.add_item(Product(id=1, name="Notebook", price=200.0), 2)
+
+    # Act
+    response = client.get("/checkout")
+
+    # Assert
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Finalizar pedido" in response.text
+    assert "Resumo final" in response.text
+
+
+def test_checkout_submission_returns_confirmation_and_clears_cart(client: TestClient) -> None:
+    """Submit checkout form, render confirmation and clear the cart."""
+    # Arrange
+    cart.add_item(Product(id=1, name="Notebook", price=200.0), 2)
+
+    # Act
+    response = client.post(
+        "/checkout",
+        data={
+            "full_name": "Geo Carlos",
+            "email": "geo@example.com",
+            "address": "Rua Central, 100 - Sao Paulo",
+            "payment_method": "pix",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 200
+    assert "Compra concluída com sucesso" in response.text
+    assert "Geo Carlos" in response.text
+    assert cart.items == []
+    assert cart.coupon is None
+
+
+def test_checkout_submission_returns_bad_request_for_empty_cart(client: TestClient) -> None:
+    """Reject checkout submission when cart is empty."""
+    # Arrange
+
+    # Act
+    response = client.post(
+        "/checkout",
+        data={
+            "full_name": "Geo Carlos",
+            "email": "geo@example.com",
+            "address": "Rua Central, 100 - Sao Paulo",
+            "payment_method": "pix",
+        },
+    )
+
+    # Assert
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Cart is empty"}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-10">
+  <div class="flex items-center justify-between mb-8 gap-4">
+    <div>
+      <p class="text-sm text-gray-400 mb-2">Checkout</p>
+      <h1 class="text-3xl font-bold text-foreground">Finalizar pedido</h1>
+    </div>
+    <a href="/cart" class="text-sm text-gray-300 hover:text-foreground transition-colors">Voltar ao carrinho</a>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <section class="lg:col-span-2 bg-card border border-border rounded-xl p-6">
+      <h2 class="text-xl font-semibold text-foreground mb-6">Dados de entrega e pagamento</h2>
+      <form method="POST" action="/checkout" class="space-y-5">
+        <div>
+          <label for="full_name" class="block text-sm font-medium text-gray-200 mb-2">Nome completo</label>
+          <input id="full_name" name="full_name" type="text" required class="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Seu nome" />
+        </div>
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-200 mb-2">E-mail</label>
+          <input id="email" name="email" type="email" required class="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="voce@exemplo.com" />
+        </div>
+        <div>
+          <label for="address" class="block text-sm font-medium text-gray-200 mb-2">Endereço de entrega</label>
+          <textarea id="address" name="address" rows="4" required class="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Rua, número, complemento, bairro e cidade"></textarea>
+        </div>
+        <div>
+          <label for="payment_method" class="block text-sm font-medium text-gray-200 mb-2">Forma de pagamento</label>
+          <select id="payment_method" name="payment_method" required class="w-full px-4 py-3 bg-secondary border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+            <option value="credit-card">Cartão de crédito</option>
+            <option value="pix">Pix</option>
+            <option value="bank-slip">Boleto</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full bg-primary hover:bg-red-700 text-white font-bold py-3 rounded-lg transition-colors">
+          Confirmar pedido
+        </button>
+      </form>
+    </section>
+
+    <aside class="bg-card border border-border rounded-xl p-6 h-fit">
+      <h2 class="text-xl font-semibold text-foreground mb-4">Resumo final</h2>
+      <div class="space-y-4 mb-6">
+        {% for item in cart_items %}
+        <div class="flex items-start justify-between gap-4 border-b border-border pb-4 last:border-b-0">
+          <div>
+            <p class="font-medium text-foreground">{{ item.product.name }}</p>
+            <p class="text-sm text-gray-400">Qtd. {{ item.quantity }}</p>
+          </div>
+          <p class="font-semibold text-foreground">R$ {{ "%.2f"|format(item.product.price * item.quantity) }}</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="space-y-3 text-sm border-t border-border pt-4">
+        <div class="flex justify-between">
+          <span class="text-gray-300">Subtotal</span>
+          <span class="text-foreground">R$ {{ "%.2f"|format(cart_summary.subtotal) }}</span>
+        </div>
+        {% if cart_summary.coupon_discount > 0 %}
+        <div class="flex justify-between text-green-500">
+          <span>Desconto cupom</span>
+          <span>-R$ {{ "%.2f"|format(cart_summary.coupon_discount) }}</span>
+        </div>
+        {% endif %}
+        {% if cart_summary.progressive_discount > 0 %}
+        <div class="flex justify-between text-green-500">
+          <span>Desconto progressivo</span>
+          <span>-R$ {{ "%.2f"|format(cart_summary.progressive_discount) }}</span>
+        </div>
+        {% endif %}
+        <div class="flex justify-between text-lg font-bold pt-2">
+          <span>Total</span>
+          <span class="text-primary">R$ {{ "%.2f"|format(cart_summary.total) }}</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}

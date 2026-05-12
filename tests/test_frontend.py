@@ -10,7 +10,8 @@ Verifica se:
 
 from fastapi.testclient import TestClient
 import pytest
-from src.main import app, cart, ShoppingCart
+from src.main import app, cart
+from src.models import Product
 
 
 @pytest.fixture(autouse=True)
@@ -207,6 +208,34 @@ class TestCartPage:
         found = any(term in response.text.lower() for term in checkout_terms)
         # Nota: Pode não ter checkout implementado ainda, então check lenient
         assert "button" in response.text.lower() or "click" in response.text.lower()
+
+
+class TestCheckoutPage:
+    """Testes da página de checkout (GET /checkout)."""
+
+    def test_checkout_redirects_with_empty_cart(self, client: TestClient) -> None:
+        """Verificar redirecionamento ao checkout com carrinho vazio."""
+        # Arrange
+
+        # Act
+        response = client.get("/checkout", follow_redirects=False)
+
+        # Assert
+        assert response.status_code == 303
+        assert response.headers["location"] == "/cart"
+
+    def test_checkout_page_contains_form_when_cart_has_items(self, client: TestClient) -> None:
+        """Verificar que o checkout renderiza formulário com carrinho preenchido."""
+        # Arrange
+        cart.add_item(Product(id=1, name="Notebook", price=200.0), 1)
+
+        # Act
+        response = client.get("/checkout")
+
+        # Assert
+        assert response.status_code == 200
+        assert "Finalizar pedido" in response.text
+        assert "form" in response.text.lower()
 
 
 class TestHTMLValidity:
