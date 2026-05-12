@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
 from pydantic import BaseModel
@@ -12,6 +13,10 @@ from src.models import CartSummary, Coupon, Product
 
 app = FastAPI()
 cart = ShoppingCart()
+
+static_dir = Path(__file__).parent.parent / "static"
+if static_dir.exists():
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
 # Configurar Jinja2
 templates_dir = Path(__file__).parent.parent / "templates"
@@ -56,6 +61,13 @@ class ApplyCouponRequest(BaseModel):
     """Representa o payload para aplicação de cupom."""
 
     code: str
+
+
+class AddItemRequest(BaseModel):
+    """Representa o payload para adicionar item ao carrinho."""
+
+    product_id: int
+    quantity: int = 1
 
 
 COUPON_CATALOG: dict[str, Coupon] = {
@@ -115,18 +127,110 @@ def api_status() -> dict[str, str]:
     return {"status": "ok"}
 
 
+def _get_product_by_id(product_id: int) -> Product:
+    """Retorna um produto da lista de destaque pelo ID.
+
+    Args:
+        product_id: Identificador do produto.
+
+    Raises:
+        HTTPException: Se produto nao existir.
+
+    Returns:
+        Produto encontrado.
+    """
+    for product in FEATURED_PRODUCTS:
+        if product.id == product_id:
+            return product
+    raise HTTPException(status_code=404, detail="Product not found")
+
+
+def _serialize_products(products: list[Product]) -> list[dict[str, Any]]:
+    """Serializa produtos para resposta JSON.
+
+    Args:
+        products: Lista de produtos.
+
+    Returns:
+        Lista serializada com metadados de localizacao.
+    """
+    payload: list[dict[str, Any]] = []
+    for product in products:
+        location = ""
+        if 1 <= product.id <= len(PRODUCT_LOCATIONS):
+            location = PRODUCT_LOCATIONS[product.id - 1]
+        payload.append(
+            {
+                "id": product.id,
+                "name": product.name,
+                "price": product.price,
+                "location": location,
+            }
+        )
+    return payload
+
+
 @app.get("/cart/summary", response_model=CartSummary)
 def get_cart_summary() -> CartSummary:
     """Retorna o resumo atual do carrinho com descontos aplicados."""
     return cart.calculate_summary()
 
 
+@app.post("/cart/add", response_model=CartSummary)
+def add_to_cart(request: AddItemRequest) -> CartSummary:
+    """Adiciona um item ao carrinho e retorna o resumo atualizado.
+
+    Args:
+        request: Payload com produto e quantidade.
+
+    Raises:
+        HTTPException: Se quantidade for invalida ou produto nao existir.
+
+    Returns:
+        Resumo atualizado do carrinho.
+    """
+    if request.quantity <= 0:
+        raise HTTPException(status_code=400, detail="Quantity must be greater than zero")
+
+    product = _get_product_by_id(request.product_id)
+    cart.add_item(product=product, quantity=request.quantity)
+    return cart.calculate_summary()
+
+
+@app.delete("/cart/remove/{product_id}", response_model=CartSummary)
+def remove_from_cart(product_id: int) -> CartSummary:
+    """Remove um item do carrinho e retorna o resumo atualizado.
+
+    Args:
+        product_id: ID do produto a remover.
+
+    Returns:
+        Resumo atualizado do carrinho.
+    """
+    cart.remove_item(product_id=product_id)
+    return cart.calculate_summary()
+
+
+@app.post("/cart/remove/{product_id}")
+def remove_from_cart_form(product_id: int) -> RedirectResponse:
+    """Remove item via formulario HTML e redireciona para /cart.
+
+    Args:
+        product_id: ID do produto a remover.
+
+    Returns:
+        Redirecionamento para pagina do carrinho.
+    """
+    cart.remove_item(product_id=product_id)
+    return RedirectResponse(url="/cart", status_code=303)
+
+
 @app.post("/cart/apply-coupon", response_model=CartSummary)
-def apply_coupon(request: ApplyCouponRequest) -> CartSummary:
+async def apply_coupon(request: Request) -> CartSummary:
     """Aplica um cupom percentual no carrinho atual.
 
     Args:
-        request: Payload com o código do cupom.
+        request: Request HTTP com JSON ou form-data contendo o codigo.
 
     Raises:
         HTTPException: Se cupom não existir ou falhar validação de negócio.
@@ -134,7 +238,19 @@ def apply_coupon(request: ApplyCouponRequest) -> CartSummary:
     Returns:
         Resumo atualizado do carrinho.
     """
-    coupon_code = request.code.strip().upper()
+    coupon_code: Optional[str] = None
+    content_type = request.headers.get("content-type", "")
+
+    if "application/json" in content_type:
+        data = await request.json()
+        coupon_code = str(data.get("code", "")).strip().upper()
+    else:
+        form_data = await request.form()
+        coupon_code = str(form_data.get("code", form_data.get("coupon_code", ""))).strip().upper()
+
+    if not coupon_code:
+        raise HTTPException(status_code=400, detail="Coupon code is required")
+
     coupon = COUPON_CATALOG.get(coupon_code)
     if coupon is None:
         raise HTTPException(status_code=404, detail="Coupon not found")
@@ -152,3 +268,51 @@ def remove_coupon() -> CartSummary:
     """Remove o cupom aplicado e retorna o resumo atualizado."""
     cart.remove_coupon()
     return cart.calculate_summary()
+
+
+@app.get("/api/search")
+def api_search(q: str = "", category: Optional[str] = None) -> list[dict[str, Any]]:
+    """Busca produtos em memoria por termo e categoria.
+
+    Args:
+        q: Termo textual de busca.
+        category: Categoria opcional (placeholder para filtros futuros).
+
+    Returns:
+        Lista de produtos encontrados.
+    """
+    del category
+
+    normalized_query = q.strip().lower()
+    if not normalized_query:
+        return _serialize_products(FEATURED_PRODUCTS)
+
+    matched_products = [
+        product
+        for product in FEATURED_PRODUCTS
+        if normalized_query in product.name.lower()
+    ]
+    return _serialize_products(matched_products)
+
+
+@app.get("/search", response_class=HTMLResponse)
+def search_page(q: str = "") -> str:
+    """Renderiza a home com produtos filtrados por termo de busca.
+
+    Args:
+        q: Termo textual de busca.
+
+    Returns:
+        HTML da home com lista de produtos filtrada.
+    """
+    normalized_query = q.strip().lower()
+    filtered = FEATURED_PRODUCTS
+    if normalized_query:
+        filtered = [product for product in FEATURED_PRODUCTS if normalized_query in product.name.lower()]
+
+    featured_products = _serialize_products(filtered)
+    return render_template(
+        "index.html",
+        featured_products=featured_products,
+        cart_count=len(cart.items),
+    )

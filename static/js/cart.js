@@ -152,29 +152,19 @@ async function addProductToCart(productId, productName) {
  * Aplica um cupom (chamado de onclick de botão).
  * @param {string} couponCode - Código do cupom
  */
-async function applyCouponAction(couponCode) {
+async function applyCouponAction(couponCode, event) {
   const summary = await CartManager.applyCoupon(couponCode);
   if (summary) {
     updateCartSummary(summary);
-    
-    // Remover o botão de cupom e exibir removedor
-    const button = event.target;
-    button.style.display = 'none';
-    button.nextElementSibling?.style.display = 'inline-block';
   }
 }
 
 /**
  * Remove um cupom (chamado de onclick de botão).
  */
-async function removeCouponAction() {
+async function removeCouponAction(event) {
   const summary = await CartManager.removeCoupon();
   if (summary) {
     updateCartSummary(summary);
-    
-    // Remover o botão de removedor e exibir cupom novamente
-    const button = event.target;
-    button.style.display = 'none';
-    button.previousElementSibling?.style.display = 'inline-block';
   }
 }

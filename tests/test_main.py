@@ -143,3 +143,77 @@ def test_remove_coupon_returns_summary_without_coupon_discount(client: TestClien
         "progressive_discount": 60.0,
         "total": 540.0,
     }
+
+
+def test_add_to_cart_returns_updated_summary(client: TestClient) -> None:
+    """Add item via API and return updated cart summary."""
+    # Arrange
+
+    # Act
+    response = client.post("/cart/add", json={"product_id": 1, "quantity": 2})
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["subtotal"] == pytest.approx(4998.0)
+    assert payload["coupon_discount"] == pytest.approx(0.0)
+    assert payload["progressive_discount"] == pytest.approx(999.6)
+    assert payload["total"] == pytest.approx(3998.4)
+
+
+def test_remove_from_cart_returns_zeroed_summary_when_empty(client: TestClient) -> None:
+    """Remove item via API and return zeroed summary for empty cart."""
+    # Arrange
+    add_response = client.post("/cart/add", json={"product_id": 1, "quantity": 1})
+    assert add_response.status_code == 200
+
+    # Act
+    response = client.delete("/cart/remove/1")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json() == {
+        "subtotal": 0.0,
+        "coupon_discount": 0.0,
+        "progressive_discount": 0.0,
+        "total": 0.0,
+    }
+
+
+def test_add_to_cart_returns_404_for_unknown_product(client: TestClient) -> None:
+    """Return 404 when adding a non-existing product to cart."""
+    # Arrange
+
+    # Act
+    response = client.post("/cart/add", json={"product_id": 999, "quantity": 1})
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Product not found"}
+
+
+def test_api_search_returns_filtered_products(client: TestClient) -> None:
+    """Return product list filtered by query term."""
+    # Arrange
+
+    # Act
+    response = client.get("/api/search", params={"q": "iphone"})
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert "iPhone" in payload[0]["name"]
+
+
+def test_search_page_returns_html(client: TestClient) -> None:
+    """Render search page as HTML using home template with filters."""
+    # Arrange
+
+    # Act
+    response = client.get("/search", params={"q": "macbook"})
+
+    # Assert
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "MacBook" in response.text

@@ -1,88 +1,165 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}Express Commerce{% endblock %} — Eletrônicos Usados</title>
+  <title>{% block title %}Express Commerce{% endblock %} - Marketplace Online</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           colors: {
-            brand: '#2563EB',
-            accent: '#F97316',
+            background: '#0a0a0a',
+            foreground: '#fafafa',
+            card: '#141414',
+            primary: '#dc2626',
+            secondary: '#262626',
+            muted: '#1a1a1a',
+            accent: '#ef4444',
+            border: '#262626'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
           }
         }
       }
     }
   </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #0a0a0a;
+      color: #fafafa;
+    }
+
+    .category-card,
+    .product-card {
+      transition: all 0.2s ease;
+    }
+
+    .category-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.15);
+    }
+
+    .product-card:hover {
+      transform: translateY(-2px);
+      border-color: #dc2626;
+    }
+  </style>
+  {% block head_extra %}{% endblock %}
 </head>
-<body class="bg-white text-gray-800 font-sans">
+<body class="min-h-screen bg-background text-foreground">
+  <header class="sticky top-0 z-50 bg-card border-b border-border">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+      <div class="flex items-center justify-between gap-4">
+        <a href="/" class="flex items-center gap-2 shrink-0">
+          <div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="text-xl font-bold text-foreground hidden sm:block">Express<span class="text-primary">Commerce</span></span>
+          <span class="sr-only">ExpressCommerce</span>
+        </a>
 
-  <!-- HEADER -->
-  <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-      <!-- Logo -->
-      <a href="/" class="text-2xl font-extrabold text-brand">
-        Express<span class="text-accent">Commerce</span>
-      </a>
+        <form method="GET" action="/search" class="flex-1 max-w-2xl hidden md:block" data-search-form>
+          <div class="relative">
+            <input
+              type="text"
+              name="q"
+              placeholder="Buscar produtos, marcas e muito mais..."
+              class="w-full bg-secondary border border-border rounded-lg py-2.5 px-4 pr-12 text-foreground placeholder:text-gray-400 focus:outline-none focus:border-primary"
+              data-search-input
+            />
+            <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 bg-primary hover:bg-red-700 text-white p-1.5 rounded-md transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </button>
+          </div>
+        </form>
 
-      <!-- Nav -->
-      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-        <a href="/" class="hover:text-brand transition-colors">Home</a>
-        <a href="#categorias" class="hover:text-brand transition-colors">Categorias</a>
-        <a href="#" class="hover:text-brand transition-colors">Vender</a>
-        <a href="#" class="bg-brand text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Entrar</a>
-      </nav>
-
-      <!-- Cart -->
-      <a href="/cart" class="relative cursor-pointer group">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-600 hover:text-brand transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.4 7h12.8M7 13H5.4M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
-        </svg>
-        <span class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{{ cart_count }}</span>
-        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Ver carrinho</span>
-      </a>
+        <div class="flex items-center gap-2 sm:gap-4">
+          <a href="#" class="hidden md:flex items-center gap-2 text-gray-400 hover:text-foreground transition-colors">
+            <span class="text-sm">Entrar</span>
+          </a>
+          <a href="#" class="hidden md:flex items-center gap-2 text-gray-400 hover:text-foreground transition-colors">
+            <span class="text-sm">Criar conta</span>
+          </a>
+          <a href="/cart" class="relative p-2 text-gray-400 hover:text-foreground transition-colors" aria-label="Carrinho">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium" data-cart-count>{{ cart_count }}</span>
+          </a>
+        </div>
+      </div>
     </div>
   </header>
 
-  {% block content %}{% endblock %}
+  <main>
+    {% block content %}{% endblock %}
+  </main>
 
-  <!-- FOOTER -->
-  <footer class="bg-gray-900 text-gray-400 text-sm">
-    <div class="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
-
-      <div>
-        <p class="text-white text-lg font-extrabold mb-2">Express<span class="text-accent">Commerce</span></p>
-        <p class="text-gray-500 text-xs leading-relaxed">O marketplace de eletrônicos usados com mais segurança e praticidade do Brasil.</p>
+  <footer class="bg-muted border-t border-border py-8 px-4 mt-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Sobre</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Quem somos</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Trabalhe conosco</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Ajuda</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Central de ajuda</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Trocas e devolucoes</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Prazos de entrega</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Vendedor</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Venda no Express</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Portal do vendedor</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Politicas</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-foreground mb-4">Suporte</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Central de ajuda</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Termos de uso</a></li>
+            <li><a href="#" class="text-sm text-gray-400 hover:text-foreground transition-colors">Privacidade</a></li>
+          </ul>
+        </div>
       </div>
 
-      <div>
-        <p class="text-white font-semibold mb-3">Links rápidos</p>
-        <ul class="space-y-2">
-          <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
-          <li><a href="#categorias" class="hover:text-white transition-colors">Categorias</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Vender</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Entrar</a></li>
-        </ul>
+      <div class="border-t border-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+          </div>
+          <span class="text-sm font-semibold text-foreground">Express<span class="text-primary">Commerce</span></span>
+        </div>
+        <p class="text-xs text-gray-400 text-center">&copy; 2026 Express Commerce. Todos os direitos reservados.</p>
       </div>
-
-      <div>
-        <p class="text-white font-semibold mb-3">Suporte</p>
-        <ul class="space-y-2">
-          <li><a href="#" class="hover:text-white transition-colors">Central de Ajuda</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Política de Privacidade</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Termos de Uso</a></li>
-          <li><a href="#" class="hover:text-white transition-colors">Fale Conosco</a></li>
-        </ul>
-      </div>
-
-    </div>
-    <div class="border-t border-gray-800 text-center py-4 text-xs text-gray-600">
-      &copy; 2026 ExpressCommerce. Todos os direitos reservados.
     </div>
   </footer>
 
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/cart.js"></script>
+  {% block scripts %}{% endblock %}
 </body>
 </html>
