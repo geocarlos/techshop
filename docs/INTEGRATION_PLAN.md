@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-Este documento mapeia como integrar o front-end Express Commerce (UI/HTML em Tailwind) com o back-end TechShop (API FastAPI com gerenciamento de cupons e carrinho).
+Este documento mapeia como integrar o front-end Express Commerce (UI/HTML em Tailwind) com o back-end TechShop (API FastAPI com gerenciamento de cupons e carrinho) usando **Jinja2** como template engine.
 
 ## Estrutura Atual
 
@@ -10,10 +10,14 @@ Este documento mapeia como integrar o front-end Express Commerce (UI/HTML em Tai
 techshop/
 ├── src/                        # Backend (Python/FastAPI)
 │   ├── cart.py                # Lógica de carrinho com cupom
-│   ├── main.py                # API FastAPI
+│   ├── main.py                # API FastAPI + rotas renderizadas com Jinja2
 │   └── models.py              # Modelos Pydantic
-├── frontend/                  # Frontend (HTML/TailwindCSS)
-│   └── index.html             # Home mockada
+├── templates/                 # Templates Jinja2 (renderização servidor)
+│   ├── base.html              # Template base com header/footer
+│   ├── index.html             # Home com produtos em destaque
+│   └── cart.html              # Página do carrinho
+├── frontend/                  # Frontend mockups (referência)
+│   └── index.html             # Home mockada em HTML puro
 ├── docs/
 │   ├── diagrama-er.md         # ER do Express Commerce
 │   ├── diagrama-fluxo.md      # Fluxo de usuário
@@ -24,103 +28,135 @@ techshop/
 
 ## Etapas de Integração
 
-### Fase 1: Construir Front-end em Next.js (Recomendado)
+### Fase 1: Renderizar Templates com Jinja2 (✅ Em Progresso)
 
-**Justificativa:** A ADR recomenda Next.js para unificar frontend + API Routes. No MVP, você pode usar a API FastAPI existente como backend e construir o frontend em Next.js separadamente.
+**Justificativa:** Usar Jinja2 permite renderização servidor (SSR) nativa no FastAPI, eliminando complexidade de cliente JavaScript e facilitando integração com lógica de backend (carrinho, cupom).
 
-**Estrutura proposta:**
+**Estrutura implementada:**
 ```
-express-commerce-frontend/    # Novo repositório (opcional)
-├── app/                      # Next.js App Router
-│   ├── page.tsx             # Home (baseado em index.html)
-│   ├── cart/page.tsx        # Carrinho
-│   └── api/                 # API Routes (proxy para FastAPI)
-├── components/              # Componentes React
-├── public/                  # Assets estáticos
-└── styles/                  # Tailwind config
-```
-
-**Ações:**
-1. Implementar components React baseados nos mockups do `frontend/index.html`
-2. Criar API Routes em Next.js que chamam a API FastAPI
-3. Integrar autenticação (NextAuth.js)
-
-### Fase 2: Conectar Front-end ao Back-end FastAPI
-
-**Endpoints de integração (já implementados):**
-```
-GET  /cart/summary
-POST /cart/apply-coupon
-DELETE /cart/coupon
+templates/
+├── base.html              # Template base com Tailwind CSS
+│   ├── Header com logo, menu, carrinho
+│   ├── Footer com links e copyright
+│   └── Bloco {% block content %} para herança
+├── index.html             # Home herdando de base.html
+│   ├── Hero section com barra de busca
+│   ├── Categorias (6 ícones)
+│   └── Grid de produtos (loop Jinja2)
+└── cart.html              # Carrinho herdando de base.html
+    ├── Lista de itens do carrinho
+    ├── Resumo com cupom aplicado
+    └── Totais (subtotal, descontos, total)
 ```
 
-**Exemplo de chamada do front-end (Next.js):**
-```typescript
-// app/api/cart/route.ts
-import { CartSummary } from '@/types/cart';
-
-export async function GET(): Promise<CartSummary> {
-  const response = await fetch('http://localhost:8000/cart/summary');
-  return response.json();
-}
-
-export async function POST(request: Request): Promise<CartSummary> {
-  const { code } = await request.json();
-  const response = await fetch('http://localhost:8000/cart/apply-coupon', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ code }),
-  });
-  return response.json();
-}
+**Rotas implementadas:**
+```
+GET  /              → renderiza index.html (home)
+GET  /cart          → renderiza cart.html (carrinho)
 ```
 
-### Fase 3: Persistência de Carrinho (Futuro)
+**Exemplo de uso de Jinja2 em templates:**
+```html
+{% for product in featured_products %}
+  <div class="product-card">
+    <h3>{{ product.name }}</h3>
+    <p class="price">R$ {{ "%.2f"|format(product.price) }}</p>
+  </div>
+{% endfor %}
+```
 
-**Atual:** Carrinho em memória (não persiste entre requisições)
+### Fase 2: Persistência de Carrinho no Banco de Dados
 
-**Melhorias recomendadas:**
-1. Carrinho persistido no PostgreSQL (via Prisma)
-2. Associar carrinho a usuário logado
-3. Migrar para Redis para performance em alta concorrência
+**Atual:** Carrinho em memória (não persiste entre requisições/usuários)
 
-### Fase 4: Autenticação e Usuários
+**Melhorias necessárias:**
+1. Criar tabela `cart` no PostgreSQL (com user_id, product_id, quantity)
+2. Implementar camada de persistência em `src/cart.py`
+3. Adicionar SQLAlchemy para ORM
+4. Associar carrinho a sessão de usuário (cookies/sessão HTTP)
 
-**Recomendação:** Integrar NextAuth.js + Supabase Auth (conforme ADR)
+**Estrutura de banco (recomendada):**
+```sql
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  email VARCHAR(255) UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE cart_items (
+  id SERIAL PRIMARY KEY,
+  user_id INTEGER REFERENCES users(id),
+  product_id INTEGER,
+  quantity INTEGER,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Fase 3: Autenticação e Gerenciamento de Sessão
+
+**Recomendação:** Integrar autenticação simples com sessões HTTP (cookies)
 
 **Passos:**
-1. Adicionar tabela `users` no banco de dados
-2. Implementar endpoints de autenticação no FastAPI
-3. Conectar NextAuth.js ao backend
+1. Implementar endpoints de login/logout
+2. Adicionar middleware de sessão (FastAPI-Sessions)
+3. Associar carrinho a user_id via sessão
+4. Adicionar template de login
+
+### Fase 4: Páginas Adicionais e E-commerce Completo
+
+**Páginas a implementar:**
+1. Página de detalhes do produto (`/product/<id>`)
+2. Página de busca e filtros (`/search?q=...&category=...`)
+3. Página de checkout
+4. Página de confirmação de pedido
 
 ## Fluxo de Desenvolvimento Recomendado
 
-1. **Semana 1:** Construir home em Next.js (baseado em `frontend/index.html`)
-2. **Semana 2:** Integrar carrinho com cupom (chamar FastAPI)
-3. **Semana 3:** Autenticação e persistência de usuário
-4. **Semana 4:** Páginas de detalhe de produto e checkout
+1. **Sprint 1:** ✅ Templates com Jinja2 (home + carrinho)
+2. **Sprint 2:** 📋 Persistência de carrinho em BD + Autenticação
+3. **Sprint 3:** 📋 Página de detalhes + Busca de produtos
+4. **Sprint 4:** 📋 Checkout e confirmação de pedido
 
-## Tecnologias Sugeridas
+## Tecnologias Stack Atual
 
 | Camada | Tecnologia | Status |
 |---|---|---|
-| Backend API | FastAPI (Python) | ✅ Implementado |
-| Frontend | Next.js 14 (React) | 📋 Planejado |
-| BD Relacional | PostgreSQL | 📋 A integrar |
-| ORM Backend | N/A (fastapi puro) | 📋 Considerar SQLalchemy |
-| ORM Frontend | Prisma | 📋 Futuro |
-| Autenticação | NextAuth.js + Supabase | 📋 Futuro |
+| **Backend** | FastAPI (Python 3.12+) | ✅ Implementado |
+| **Template Engine** | Jinja2 | ✅ Implementado |
+| **CSS Framework** | Tailwind CSS (CDN) | ✅ Implementado |
+| **BD Relacional** | PostgreSQL | 📋 A integrar |
+| **ORM Backend** | SQLAlchemy | 📋 Futuro |
+| **Sessão/Auth** | FastAPI-Sessions | 📋 Futuro |
+| **Testes** | pytest + Jinja2 rendering | ✅ Em progresso |
+
+## Mudança de Abordagem: Por que Jinja2 em vez de Next.js?
+
+**Razões:**
+- **Velocidade de MVP:** Renderização no servidor elimina complexidade de cliente/servidor separado
+- **Integração simplificada:** Estado do carrinho vive no backend, não precisa de API REST complexa
+- **Menos dependências:** Python + Jinja2 contra TypeScript + Node.js + React
+- **Fácil escalabilidade:** Se crescer, sempre é possível migrar para SPA com React/Vue consumindo API do FastAPI
+
+**Trade-offs:**
+- Sem interatividade client-side nativa (usa HTML forms + POST/GET)
+- Sem SSR complexo de React (mas Jinja2 é mais simples)
+- Melhor performance em produção com cache de templates
 
 ## Próximas Ações
 
-- [ ] Criar repositório Next.js ou migrar `frontend/` para TypeScript
-- [ ] Adicionar persistência de carrinho no FastAPI (BD)
-- [ ] Implementar CORS no FastAPI para aceitar requisições do front
-- [ ] Criar testes e2e para fluxos de carrinho + cupom
+- [ ] Adicionar dependência `jinja2` no pyproject.toml
+- [ ] Testar renderização de templates no servidor (`uv run uvicorn src.main:app --reload`)
+- [ ] Implementar persistência de carrinho em BD (PostgreSQL + SQLAlchemy)
+- [ ] Integrar autenticação com FastAPI-Sessions
+- [ ] Criar página de detalhes de produto
+- [ ] Implementar busca e filtros de categoria
+- [ ] Criar testes de renderização com Jinja2 (test_templates.py)
 
 ## Referências
 
-- ADR: `docs/plan-expressCommerce.prompt.md`
-- Diagramas: `docs/diagrama-er.md`, `docs/diagrama-fluxo.md`
-- Mockup Home: `frontend/index.html`
-- API Docs: `http://localhost:8000/docs` (swagger ao iniciar o backend)
+- **Jinja2 Docs:** https://jinja.palletsprojects.com/
+- **FastAPI + Jinja2:** https://fastapi.tiangolo.com/advanced/templates/
+- **Tailwind CSS:** https://tailwindcss.com/
+- **ADR (Alternativa Next.js):** `docs/plan-expressCommerce.prompt.md`
+- **Diagramas:** `docs/diagrama-er.md`, `docs/diagrama-fluxo.md`
+- **API Docs:** `http://localhost:8000/docs` (swagger ao iniciar o backend)
