@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
+from urllib.parse import parse_qs
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -70,6 +71,15 @@ class AddItemRequest(BaseModel):
     quantity: int = 1
 
 
+class CheckoutForm(BaseModel):
+    """Representa os dados básicos do checkout."""
+
+    full_name: str
+    email: str
+    address: str
+    payment_method: str
+
+
 COUPON_CATALOG: dict[str, Coupon] = {
     "SAVE10": Coupon(code="SAVE10", discount_percent=10, min_purchase=100),
     "VIP15": Coupon(
@@ -113,6 +123,65 @@ def view_cart() -> str:
         "cart.html",
         cart_items=cart.items,
         cart_summary=summary,
+        cart_count=len(cart.items),
+    )
+
+
+@app.get("/checkout", response_class=HTMLResponse)
+def view_checkout():
+    """Renderiza a página de checkout com os dados atuais do carrinho.
+
+    Returns:
+        HTML do checkout ou redirecionamento para o carrinho vazio.
+    """
+    if not cart.items:
+        return RedirectResponse(url="/cart", status_code=303)
+
+    summary = cart.calculate_summary()
+    return render_template(
+        "checkout.html",
+        cart_items=cart.items,
+        cart_summary=summary,
+        cart_count=len(cart.items),
+    )
+
+
+@app.post("/checkout", response_class=HTMLResponse)
+async def place_order(request: Request) -> str:
+    """Finaliza o checkout, limpa o carrinho e exibe confirmação.
+
+    Args:
+        request: Request HTTP com os dados do formulário.
+
+    Raises:
+        HTTPException: Se o carrinho estiver vazio ou campos obrigatórios faltarem.
+
+    Returns:
+        HTML da confirmação do pedido.
+    """
+    if not cart.items:
+        raise HTTPException(status_code=400, detail="Cart is empty")
+
+    form_data = await _parse_request_data(request)
+    checkout_form = CheckoutForm(
+        full_name=str(form_data.get("full_name", "")).strip(),
+        email=str(form_data.get("email", "")).strip(),
+        address=str(form_data.get("address", "")).strip(),
+        payment_method=str(form_data.get("payment_method", "")).strip(),
+    )
+
+    summary = cart.calculate_summary()
+    order_id = f"TS-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+
+    cart.items = []
+    cart.remove_coupon()
+
+    return render_template(
+        "order_confirmation.html",
+        order_id=order_id,
+        customer_name=checkout_form.full_name,
+        cart_summary=summary,
+        payment_method=checkout_form.payment_method,
         cart_count=len(cart.items),
     )
 
@@ -168,6 +237,24 @@ def _serialize_products(products: list[Product]) -> list[dict[str, Any]]:
             }
         )
     return payload
+
+
+async def _parse_request_data(request: Request) -> dict[str, Any]:
+    """Extrai dados JSON ou form-urlencoded sem python-multipart.
+
+    Args:
+        request: Request HTTP recebida.
+
+    Returns:
+        Dicionário com os dados enviados.
+    """
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        return await request.json()
+
+    raw_body = await request.body()
+    parsed_data = parse_qs(raw_body.decode("utf-8"), keep_blank_values=True)
+    return {key: values[-1] if values else "" for key, values in parsed_data.items()}
 
 
 @app.get("/cart/summary", response_model=CartSummary)
@@ -238,15 +325,10 @@ async def apply_coupon(request: Request) -> CartSummary:
     Returns:
         Resumo atualizado do carrinho.
     """
-    coupon_code: Optional[str] = None
-    content_type = request.headers.get("content-type", "")
-
-    if "application/json" in content_type:
-        data = await request.json()
-        coupon_code = str(data.get("code", "")).strip().upper()
-    else:
-        form_data = await request.form()
-        coupon_code = str(form_data.get("code", form_data.get("coupon_code", ""))).strip().upper()
+    request_data = await _parse_request_data(request)
+    coupon_code: Optional[str] = str(
+        request_data.get("code", request_data.get("coupon_code", ""))
+    ).strip().upper()
 
     if not coupon_code:
         raise HTTPException(status_code=400, detail="Coupon code is required")
