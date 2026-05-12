@@ -29,8 +29,11 @@ def client() -> TestClient:
     return TestClient(app)
 
 
-def test_read_root_returns_ok_status(client: TestClient) -> None:
-    """Return application health status on root endpoint."""
+def test_read_root_returns_html_with_featured_products(client: TestClient) -> None:
+    """Return home page HTML with featured products and navigation.
+
+    Verifica se a página home é renderizada com Jinja2 contendo elementos esperados.
+    """
     # Arrange
 
     # Act
@@ -38,7 +41,28 @@ def test_read_root_returns_ok_status(client: TestClient) -> None:
 
     # Assert
     assert response.status_code == 200
-    assert response.json() == {"status": "ok"}
+    assert "text/html" in response.headers["content-type"]
+    assert "ExpressCommerce" in response.text
+    assert "Produtos em destaque" in response.text
+    assert "iPhone 13 128GB" in response.text
+
+
+def test_get_cart_page_returns_html_with_summary(client: TestClient) -> None:
+    """Return cart page HTML with cart summary.
+
+    Verifica se a página do carrinho é renderizada com Jinja2 contendo
+    o resumo e estrutura esperada.
+    """
+    # Arrange
+
+    # Act
+    response = client.get("/cart")
+
+    # Assert
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "Carrinho" in response.text
+    assert "Seu carrinho está vazio" in response.text
 
 
 def test_get_cart_summary_returns_zeroed_totals_for_empty_cart(client: TestClient) -> None:

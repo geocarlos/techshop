@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Express Commerce{% endblock %} — Eletrônicos Usados</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: '#2563EB',
+            accent: '#F97316',
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-white text-gray-800 font-sans">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <!-- Logo -->
+      <a href="/" class="text-2xl font-extrabold text-brand">
+        Express<span class="text-accent">Commerce</span>
+      </a>
+
+      <!-- Nav -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
+        <a href="/" class="hover:text-brand transition-colors">Home</a>
+        <a href="#categorias" class="hover:text-brand transition-colors">Categorias</a>
+        <a href="#" class="hover:text-brand transition-colors">Vender</a>
+        <a href="#" class="bg-brand text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Entrar</a>
+      </nav>
+
+      <!-- Cart -->
+      <a href="/cart" class="relative cursor-pointer group">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-gray-600 hover:text-brand transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.4 7h12.8M7 13H5.4M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
+        </svg>
+        <span class="absolute -top-2 -right-2 bg-accent text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">{{ cart_count }}</span>
+        <span class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">Ver carrinho</span>
+      </a>
+    </div>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  <!-- FOOTER -->
+  <footer class="bg-gray-900 text-gray-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 py-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+
+      <div>
+        <p class="text-white text-lg font-extrabold mb-2">Express<span class="text-accent">Commerce</span></p>
+        <p class="text-gray-500 text-xs leading-relaxed">O marketplace de eletrônicos usados com mais segurança e praticidade do Brasil.</p>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-3">Links rápidos</p>
+        <ul class="space-y-2">
+          <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+          <li><a href="#categorias" class="hover:text-white transition-colors">Categorias</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Vender</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Entrar</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="text-white font-semibold mb-3">Suporte</p>
+        <ul class="space-y-2">
+          <li><a href="#" class="hover:text-white transition-colors">Central de Ajuda</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Política de Privacidade</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Termos de Uso</a></li>
+          <li><a href="#" class="hover:text-white transition-colors">Fale Conosco</a></li>
+        </ul>
+      </div>
+
+    </div>
+    <div class="border-t border-gray-800 text-center py-4 text-xs text-gray-600">
+      &copy; 2026 ExpressCommerce. Todos os direitos reservados.
+    </div>
+  </footer>
+
+</body>
+</html>

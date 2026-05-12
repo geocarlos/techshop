@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Carrinho{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-10">
+  <h1 class="text-3xl font-bold mb-8 text-gray-800">Seu Carrinho</h1>
+
+  {% if cart_items %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Itens do carrinho -->
+      <div class="md:col-span-2">
+        <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          {% for item in cart_items %}
+            <div class="flex gap-4 p-4 border-b border-gray-200 last:border-b-0">
+              <img src="https://placehold.co/120x120/e0e7ff/2563EB?text=Product" alt="{{ item.product.name }}" class="w-24 h-24 object-cover rounded-lg" />
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-800 mb-1">{{ item.product.name }}</h3>
+                <p class="text-accent font-bold text-lg mb-2">R$ {{ "%.2f"|format(item.product.price) }}</p>
+                <div class="flex items-center gap-2">
+                  <label class="text-sm text-gray-600">Quantidade:</label>
+                  <span class="font-medium">{{ item.quantity }}</span>
+                </div>
+                <p class="text-gray-600 text-sm mt-2">Subtotal: <span class="font-bold text-gray-800">R$ {{ "%.2f"|format(item.product.price * item.quantity) }}</span></p>
+              </div>
+              <form method="POST" action="/cart/remove/{{ item.product.id }}" style="align-self: start;">
+                <button type="submit" class="text-red-500 hover:text-red-700 text-sm font-medium">Remover</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Resumo do pedido -->
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 h-fit">
+        <h2 class="text-xl font-bold mb-4 text-gray-800">Resumo do Pedido</h2>
+        
+        <div class="space-y-3 border-b border-gray-200 pb-4">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Subtotal:</span>
+            <span class="font-medium text-gray-800">R$ {{ "%.2f"|format(cart_summary.subtotal) }}</span>
+          </div>
+          
+          {% if cart_summary.coupon_discount > 0 %}
+            <div class="flex justify-between text-sm text-green-600">
+              <span>Desconto Cupom:</span>
+              <span class="font-medium">-R$ {{ "%.2f"|format(cart_summary.coupon_discount) }}</span>
+            </div>
+          {% endif %}
+          
+          {% if cart_summary.progressive_discount > 0 %}
+            <div class="flex justify-between text-sm text-green-600">
+              <span>Desconto Progressivo:</span>
+              <span class="font-medium">-R$ {{ "%.2f"|format(cart_summary.progressive_discount) }}</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="flex justify-between text-lg font-bold mt-4 mb-6 text-gray-800">
+          <span>Total:</span>
+          <span class="text-accent">R$ {{ "%.2f"|format(cart_summary.total) }}</span>
+        </div>
+
+        <!-- Aplicar cupom -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Cupom de Desconto</label>
+          <form method="POST" action="/cart/apply-coupon" class="flex gap-2">
+            <input
+              type="text"
+              name="code"
+              placeholder="Código do cupom"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+            <button type="submit" class="bg-brand hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors">Aplicar</button>
+          </form>
+        </div>
+
+        <button class="w-full bg-accent hover:bg-orange-500 text-white font-bold py-3 rounded-lg transition-colors mb-2">
+          Ir para Checkout
+        </button>
+        <a href="/" class="block text-center text-brand hover:text-blue-700 font-medium text-sm">Continuar Comprando</a>
+      </div>
+
+    </div>
+  {% else %}
+    <div class="text-center py-16">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-gray-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13l-1.4 7h12.8M7 13H5.4M10 21a1 1 0 100-2 1 1 0 000 2zm7 0a1 1 0 100-2 1 1 0 000 2z" />
+      </svg>
+      <h2 class="text-2xl font-bold text-gray-400 mb-2">Seu carrinho está vazio</h2>
+      <p class="text-gray-500 mb-6">Adicione produtos para começar a comprar.</p>
+      <a href="/" class="inline-block bg-brand hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">Continuar Comprando</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
