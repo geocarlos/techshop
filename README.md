@@ -143,6 +143,23 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 3.  **Acesse a API:**
     A API estará disponível em `http://127.0.0.1:8000`.
     A documentação interativa (Swagger UI) pode ser acessada em `http://127.0.0.1:8000/docs`.
+    O contrato OpenAPI em JSON fica em `http://127.0.0.1:8000/openapi.json`.
+    A documentação alternativa ReDoc fica em `http://127.0.0.1:8000/redoc`.
+
+### Documentação Swagger / OpenAPI
+
+O FastAPI já inclui Swagger UI no projeto. A configuração em `src/main.py` define título,
+descrição, versão, tags por domínio e exemplos de payload para os endpoints da API.
+As rotas HTML renderizadas por template ficam fora do schema para manter a documentação
+focada no contrato JSON.
+
+Scripts JavaScript para validar status codes e schemas JSON no Postman estão em
+`docs/POSTMAN_TEST_SCRIPTS.md`.
+
+A collection e o ambiente prontos para importar no Postman ficam em:
+
+- `postman/TechShop API Tests.postman_collection.json`
+- `postman/TechShop API Tests.postman_environment.json`
 
 ## Executando Testes
 
@@ -154,8 +171,11 @@ uv run pytest -q
 
 ## Endpoints de Carrinho e Cupom
 
-- `GET /`: Status da aplicação.
+- `GET /api/status`: Retorna o status da aplicação.
+- `GET /api/search`: Busca produtos por termo textual.
 - `GET /cart/summary`: Retorna o resumo atual do carrinho com descontos aplicados.
+- `POST /cart/add`: Adiciona um produto ao carrinho.
+- `DELETE /cart/remove/{product_id}`: Remove um produto do carrinho.
 - `POST /cart/apply-coupon`: Aplica um cupom percentual.
 - `DELETE /cart/coupon`: Remove o cupom aplicado.
 

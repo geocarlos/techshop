@@ -7,12 +7,51 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from jinja2 import Environment, FileSystemLoader
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
 
 from src.cart import ShoppingCart
 from src.models import CartSummary, Coupon, Product
 
-app = FastAPI()
+API_TAGS = [
+    {
+        "name": "Health",
+        "description": "Endpoints para verificacao operacional da API.",
+    },
+    {
+        "name": "Products",
+        "description": "Consulta e descoberta de produtos disponiveis.",
+    },
+    {
+        "name": "Cart",
+        "description": "Operacoes de carrinho, descontos progressivos e cupons.",
+    },
+]
+
+ERROR_RESPONSES = {
+    400: {"description": "Requisicao invalida ou regra de negocio nao atendida."},
+    404: {"description": "Recurso nao encontrado."},
+}
+
+app = FastAPI(
+    title="TechShop API",
+    summary="API de e-commerce para vitrine, carrinho e cupons.",
+    description=(
+        "Documentacao interativa da API TechShop. Use esta interface Swagger "
+        "para testar busca de produtos, resumo de carrinho, adicao/remocao de "
+        "itens e aplicacao de cupons."
+    ),
+    version="0.1.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    openapi_tags=API_TAGS,
+    swagger_ui_parameters={
+        "displayRequestDuration": True,
+        "defaultModelsExpandDepth": 1,
+        "operationsSorter": "method",
+        "tagsSorter": "alpha",
+    },
+)
 cart = ShoppingCart()
 
 static_dir = Path(__file__).parent.parent / "static"
@@ -58,17 +97,87 @@ PRODUCT_LOCATIONS = [
 ]
 
 
+class ApiStatusResponse(BaseModel):
+    """Representa a resposta de saude da API."""
+
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"status": "ok"}]},
+    )
+
+    status: str = Field(examples=["ok"])
+
+
+class ProductCatalogItem(BaseModel):
+    """Representa um produto retornado pela API de busca."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "id": 1,
+                    "name": "iPhone 13 128GB — Meia-noite",
+                    "price": 2499.0,
+                    "location": "Sao Paulo, SP",
+                }
+            ]
+        },
+    )
+
+    id: int = Field(examples=[1])
+    name: str = Field(examples=["iPhone 13 128GB — Meia-noite"])
+    price: float = Field(ge=0, examples=[2499.0])
+    location: str = Field(examples=["Sao Paulo, SP"])
+
+
 class ApplyCouponRequest(BaseModel):
     """Representa o payload para aplicação de cupom."""
 
-    code: str
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"code": "SAVE10"}]},
+    )
+
+    code: str = Field(min_length=1, examples=["SAVE10"])
 
 
 class AddItemRequest(BaseModel):
     """Representa o payload para adicionar item ao carrinho."""
 
-    product_id: int
-    quantity: int = 1
+    model_config = ConfigDict(
+        json_schema_extra={"examples": [{"product_id": 1, "quantity": 2}]},
+    )
+
+    product_id: int = Field(examples=[1])
+    quantity: int = Field(default=1, examples=[2])
+
+
+APPLY_COUPON_OPENAPI_EXTRA = {
+    "requestBody": {
+        "required": True,
+        "content": {
+            "application/json": {
+                "schema": ApplyCouponRequest.model_json_schema(),
+                "examples": {
+                    "save10": {
+                        "summary": "Cupom valido",
+                        "value": {"code": "SAVE10"},
+                    }
+                },
+            },
+            "application/x-www-form-urlencoded": {
+                "schema": {
+                    "type": "object",
+                    "required": ["coupon_code"],
+                    "properties": {
+                        "coupon_code": {
+                            "type": "string",
+                            "example": "SAVE10",
+                        }
+                    },
+                }
+            },
+        },
+    }
+}
 
 
 class CheckoutForm(BaseModel):
@@ -91,7 +200,7 @@ COUPON_CATALOG: dict[str, Coupon] = {
     "INACTIVE5": Coupon(code="INACTIVE5", discount_percent=5, is_active=False),
 }
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
 def home() -> str:
     """Renderiza a página inicial com produtos em destaque.
 
@@ -108,10 +217,14 @@ def home() -> str:
         for i in range(len(FEATURED_PRODUCTS))
     ]
 
-    return render_template("index.html", featured_products=featured_products, cart_count=len(cart.items))
+    return render_template(
+        "index.html",
+        featured_products=featured_products,
+        cart_count=len(cart.items),
+    )
 
 
-@app.get("/cart", response_class=HTMLResponse)
+@app.get("/cart", response_class=HTMLResponse, include_in_schema=False)
 def view_cart() -> str:
     """Renderiza a página do carrinho com resumo de totais.
 
@@ -127,7 +240,7 @@ def view_cart() -> str:
     )
 
 
-@app.get("/checkout", response_class=HTMLResponse)
+@app.get("/checkout", response_class=HTMLResponse, include_in_schema=False)
 def view_checkout():
     """Renderiza a página de checkout com os dados atuais do carrinho.
 
@@ -146,7 +259,7 @@ def view_checkout():
     )
 
 
-@app.post("/checkout", response_class=HTMLResponse)
+@app.post("/checkout", response_class=HTMLResponse, include_in_schema=False)
 async def place_order(request: Request) -> str:
     """Finaliza o checkout, limpa o carrinho e exibe confirmação.
 
@@ -186,14 +299,20 @@ async def place_order(request: Request) -> str:
     )
 
 
-@app.get("/api/status")
-def api_status() -> dict[str, str]:
+@app.get(
+    "/api/status",
+    response_model=ApiStatusResponse,
+    tags=["Health"],
+    summary="Verifica status da API",
+    response_description="Status operacional da aplicacao.",
+)
+def api_status() -> ApiStatusResponse:
     """Retorna o status básico da API para fins de compatibilidade.
 
     Returns:
         Dicionário com status da aplicação.
     """
-    return {"status": "ok"}
+    return ApiStatusResponse(status="ok")
 
 
 def _get_product_by_id(product_id: int) -> Product:
@@ -257,13 +376,26 @@ async def _parse_request_data(request: Request) -> dict[str, Any]:
     return {key: values[-1] if values else "" for key, values in parsed_data.items()}
 
 
-@app.get("/cart/summary", response_model=CartSummary)
+@app.get(
+    "/cart/summary",
+    response_model=CartSummary,
+    tags=["Cart"],
+    summary="Consulta resumo do carrinho",
+    response_description="Resumo atual com subtotal, descontos e total.",
+)
 def get_cart_summary() -> CartSummary:
     """Retorna o resumo atual do carrinho com descontos aplicados."""
     return cart.calculate_summary()
 
 
-@app.post("/cart/add", response_model=CartSummary)
+@app.post(
+    "/cart/add",
+    response_model=CartSummary,
+    tags=["Cart"],
+    summary="Adiciona item ao carrinho",
+    response_description="Resumo atualizado apos a inclusao do item.",
+    responses=ERROR_RESPONSES,
+)
 def add_to_cart(request: AddItemRequest) -> CartSummary:
     """Adiciona um item ao carrinho e retorna o resumo atualizado.
 
@@ -284,7 +416,13 @@ def add_to_cart(request: AddItemRequest) -> CartSummary:
     return cart.calculate_summary()
 
 
-@app.delete("/cart/remove/{product_id}", response_model=CartSummary)
+@app.delete(
+    "/cart/remove/{product_id}",
+    response_model=CartSummary,
+    tags=["Cart"],
+    summary="Remove item do carrinho",
+    response_description="Resumo atualizado apos a remocao do item.",
+)
 def remove_from_cart(product_id: int) -> CartSummary:
     """Remove um item do carrinho e retorna o resumo atualizado.
 
@@ -298,7 +436,7 @@ def remove_from_cart(product_id: int) -> CartSummary:
     return cart.calculate_summary()
 
 
-@app.post("/cart/remove/{product_id}")
+@app.post("/cart/remove/{product_id}", include_in_schema=False)
 def remove_from_cart_form(product_id: int) -> RedirectResponse:
     """Remove item via formulario HTML e redireciona para /cart.
 
@@ -312,7 +450,15 @@ def remove_from_cart_form(product_id: int) -> RedirectResponse:
     return RedirectResponse(url="/cart", status_code=303)
 
 
-@app.post("/cart/apply-coupon", response_model=CartSummary)
+@app.post(
+    "/cart/apply-coupon",
+    response_model=CartSummary,
+    tags=["Cart"],
+    summary="Aplica cupom ao carrinho",
+    response_description="Resumo atualizado com o cupom aplicado.",
+    responses=ERROR_RESPONSES,
+    openapi_extra=APPLY_COUPON_OPENAPI_EXTRA,
+)
 async def apply_coupon(request: Request) -> CartSummary:
     """Aplica um cupom percentual no carrinho atual.
 
@@ -345,14 +491,26 @@ async def apply_coupon(request: Request) -> CartSummary:
     return cart.calculate_summary()
 
 
-@app.delete("/cart/coupon", response_model=CartSummary)
+@app.delete(
+    "/cart/coupon",
+    response_model=CartSummary,
+    tags=["Cart"],
+    summary="Remove cupom aplicado",
+    response_description="Resumo atualizado sem desconto de cupom.",
+)
 def remove_coupon() -> CartSummary:
     """Remove o cupom aplicado e retorna o resumo atualizado."""
     cart.remove_coupon()
     return cart.calculate_summary()
 
 
-@app.get("/api/search")
+@app.get(
+    "/api/search",
+    response_model=list[ProductCatalogItem],
+    tags=["Products"],
+    summary="Busca produtos",
+    response_description="Produtos encontrados para os filtros informados.",
+)
 def api_search(q: str = "", category: Optional[str] = None) -> list[dict[str, Any]]:
     """Busca produtos em memoria por termo e categoria.
 
@@ -377,7 +535,7 @@ def api_search(q: str = "", category: Optional[str] = None) -> list[dict[str, An
     return _serialize_products(matched_products)
 
 
-@app.get("/search", response_class=HTMLResponse)
+@app.get("/search", response_class=HTMLResponse, include_in_schema=False)
 def search_page(q: str = "") -> str:
     """Renderiza a home com produtos filtrados por termo de busca.
 
@@ -390,7 +548,11 @@ def search_page(q: str = "") -> str:
     normalized_query = q.strip().lower()
     filtered = FEATURED_PRODUCTS
     if normalized_query:
-        filtered = [product for product in FEATURED_PRODUCTS if normalized_query in product.name.lower()]
+        filtered = [
+            product
+            for product in FEATURED_PRODUCTS
+            if normalized_query in product.name.lower()
+        ]
 
     featured_products = _serialize_products(filtered)
     return render_template(

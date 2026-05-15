@@ -206,6 +206,48 @@ def test_api_search_returns_filtered_products(client: TestClient) -> None:
     assert "iPhone" in payload[0]["name"]
 
 
+def test_swagger_ui_is_available(client: TestClient) -> None:
+    """Expose interactive Swagger UI for API documentation."""
+    # Arrange
+
+    # Act
+    response = client.get("/docs")
+
+    # Assert
+    assert response.status_code == 200
+    assert "text/html" in response.headers["content-type"]
+    assert "swagger-ui" in response.text.lower()
+    assert "/openapi.json" in response.text
+
+
+def test_openapi_schema_documents_api_routes_only(client: TestClient) -> None:
+    """Document JSON API routes and omit server-rendered HTML routes."""
+    # Arrange
+
+    # Act
+    response = client.get("/openapi.json")
+
+    # Assert
+    assert response.status_code == 200
+    schema = response.json()
+    paths = schema["paths"]
+
+    assert schema["info"]["title"] == "TechShop API"
+    assert "/api/status" in paths
+    assert "/api/search" in paths
+    assert "/cart/add" in paths
+    assert "/cart/apply-coupon" in paths
+    assert "/" not in paths
+    assert "/cart" not in paths
+    assert "/checkout" not in paths
+
+    apply_coupon_operation = paths["/cart/apply-coupon"]["post"]
+    request_content = apply_coupon_operation["requestBody"]["content"]
+    assert apply_coupon_operation["tags"] == ["Cart"]
+    assert "application/json" in request_content
+    assert "application/x-www-form-urlencoded" in request_content
+
+
 def test_search_page_returns_html(client: TestClient) -> None:
     """Render search page as HTML using home template with filters."""
     # Arrange

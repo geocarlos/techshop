@@ -1,0 +1,552 @@
+{
+  "info": {
+    "_postman_id": "8dd2c474-62c4-4f8a-b715-4b88f0289ef3",
+    "name": "TechShop API Tests",
+    "description": "Postman collection generated from the TechShop Swagger/OpenAPI contract and docs/POSTMAN_TEST_SCRIPTS.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /api/status - 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const statusSchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"status\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    status: {",
+                  "      type: \"string\",",
+                  "      enum: [\"ok\"]",
+                  "    }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON deve seguir ApiStatusResponse\", function () {",
+                  "  pm.response.to.have.jsonSchema(statusSchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:8000/api/status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "GET /api/search - 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const productCatalogSchema = {",
+                  "  type: \"array\",",
+                  "  items: {",
+                  "    type: \"object\",",
+                  "    required: [\"id\", \"name\", \"price\", \"location\"],",
+                  "    additionalProperties: false,",
+                  "    properties: {",
+                  "      id: {",
+                  "        type: \"integer\"",
+                  "      },",
+                  "      name: {",
+                  "        type: \"string\",",
+                  "        minLength: 1",
+                  "      },",
+                  "      price: {",
+                  "        type: \"number\",",
+                  "        minimum: 0",
+                  "      },",
+                  "      location: {",
+                  "        type: \"string\"",
+                  "      }",
+                  "    }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON deve seguir lista de ProductCatalogItem\", function () {",
+                  "  pm.response.to.have.jsonSchema(productCatalogSchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:8000/api/search?q=iphone"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "GET /cart/summary - 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cartSummarySchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"subtotal\", \"coupon_discount\", \"progressive_discount\", \"total\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    subtotal: {",
+                  "      type: \"number\",",
+                  "      minimum: 0",
+                  "    },",
+                  "    coupon_discount: {",
+                  "      type: \"number\",",
+                  "      minimum: 0",
+                  "    },",
+                  "    progressive_discount: {",
+                  "      type: \"number\",",
+                  "      minimum: 0",
+                  "    },",
+                  "    total: {",
+                  "      type: \"number\",",
+                  "      minimum: 0",
+                  "    }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON deve seguir CartSummary\", function () {",
+                  "  pm.response.to.have.jsonSchema(cartSummarySchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "http://127.0.0.1:8000/cart/summary"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /cart/add - 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cartSummarySchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"subtotal\", \"coupon_discount\", \"progressive_discount\", \"total\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    subtotal: { type: \"number\", minimum: 0 },",
+                  "    coupon_discount: { type: \"number\", minimum: 0 },",
+                  "    progressive_discount: { type: \"number\", minimum: 0 },",
+                  "    total: { type: \"number\", minimum: 0 }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON de sucesso deve seguir CartSummary\", function () {",
+                  "  pm.response.to.have.jsonSchema(cartSummarySchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "http://127.0.0.1:8000/cart/add"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /cart/add - 400 invalid quantity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"detail\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    detail: {",
+                  "      type: \"string\",",
+                  "      minLength: 1",
+                  "    }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON de erro deve conter detail\", function () {",
+                  "  pm.response.to.have.jsonSchema(errorSchema);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro deve indicar quantidade invalida\", function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.detail).to.eql(\"Quantity must be greater than zero\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"product_id\": 1,\n  \"quantity\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "http://127.0.0.1:8000/cart/add"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /cart/apply-coupon - 200",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.sendRequest({",
+                  "  url: \"http://127.0.0.1:8000/cart/add\",",
+                  "  method: \"POST\",",
+                  "  header: {",
+                  "    \"Content-Type\": \"application/json\"",
+                  "  },",
+                  "  body: {",
+                  "    mode: \"raw\",",
+                  "    raw: JSON.stringify({",
+                  "      product_id: 1,",
+                  "      quantity: 1",
+                  "    })",
+                  "  }",
+                  "}, function (err, response) {",
+                  "  pm.expect(err).to.equal(null);",
+                  "  pm.expect(response.code).to.equal(200);",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cartSummarySchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"subtotal\", \"coupon_discount\", \"progressive_discount\", \"total\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    subtotal: { type: \"number\", minimum: 0 },",
+                  "    coupon_discount: { type: \"number\", minimum: 0 },",
+                  "    progressive_discount: { type: \"number\", minimum: 0 },",
+                  "    total: { type: \"number\", minimum: 0 }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON de sucesso deve seguir CartSummary\", function () {",
+                  "  pm.response.to.have.jsonSchema(cartSummarySchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SAVE10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "http://127.0.0.1:8000/cart/apply-coupon"
+          },
+          "response": []
+        },
+        {
+          "name": "POST /cart/apply-coupon - 400 empty code",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const errorSchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"detail\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    detail: {",
+                  "      type: \"string\",",
+                  "      minLength: 1",
+                  "    }",
+                  "  }",
+                  "};",
+                  "",
+                  "const acceptedBusinessErrors = [",
+                  "  \"Coupon code is required\",",
+                  "  \"Cart subtotal is below coupon minimum purchase\",",
+                  "  \"Coupon is inactive\",",
+                  "  \"Coupon is expired\"",
+                  "];",
+                  "",
+                  "pm.test(\"Status code deve ser 400\", function () {",
+                  "  pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON de erro deve conter detail\", function () {",
+                  "  pm.response.to.have.jsonSchema(errorSchema);",
+                  "});",
+                  "",
+                  "pm.test(\"Erro deve ser uma falha de regra de negocio esperada\", function () {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(acceptedBusinessErrors).to.include(body.detail);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "http://127.0.0.1:8000/cart/apply-coupon"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /cart/coupon - 200",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cartSummarySchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"subtotal\", \"coupon_discount\", \"progressive_discount\", \"total\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    subtotal: { type: \"number\", minimum: 0 },",
+                  "    coupon_discount: { type: \"number\", minimum: 0 },",
+                  "    progressive_discount: { type: \"number\", minimum: 0 },",
+                  "    total: { type: \"number\", minimum: 0 }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON deve seguir CartSummary\", function () {",
+                  "  pm.response.to.have.jsonSchema(cartSummarySchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "http://127.0.0.1:8000/cart/coupon"
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /cart/remove/{product_id} - 200 cleanup",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const cartSummarySchema = {",
+                  "  type: \"object\",",
+                  "  required: [\"subtotal\", \"coupon_discount\", \"progressive_discount\", \"total\"],",
+                  "  additionalProperties: false,",
+                  "  properties: {",
+                  "    subtotal: { type: \"number\", minimum: 0 },",
+                  "    coupon_discount: { type: \"number\", minimum: 0 },",
+                  "    progressive_discount: { type: \"number\", minimum: 0 },",
+                  "    total: { type: \"number\", minimum: 0 }",
+                  "  }",
+                  "};",
+                  "",
+                  "pm.test(\"Status code deve ser 200\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Resposta deve ser JSON\", function () {",
+                  "  const contentType = pm.response.headers.get(\"Content-Type\") || \"\";",
+                  "  pm.expect(contentType).to.include(\"application/json\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema JSON deve seguir CartSummary\", function () {",
+                  "  pm.response.to.have.jsonSchema(cartSummarySchema);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "http://127.0.0.1:8000/cart/remove/1"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "coupon_code",
+      "value": "SAVE10",
+      "type": "string"
+    }
+  ]
+}
