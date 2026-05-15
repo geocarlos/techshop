@@ -11,7 +11,7 @@ Executar com: uv run pytest tests/test_e2e.py -v -s
 """
 
 import pytest
-from playwright.sync_api import Browser, Page, sync_playwright
+from playwright.sync_api import Browser, Page, expect, sync_playwright
 
 
 pytestmark = pytest.mark.e2e
@@ -32,6 +32,46 @@ def page(browser: Browser) -> Page:
     page = browser.new_page()
     yield page
     page.close()
+
+
+class TestE2EPurchaseWorkflow:
+    """Testes e2e do fluxo completo de compra."""
+
+    BASE_URL = "http://localhost:8000"
+
+    def test_add_item_and_finish_purchase(self, page: Page) -> None:
+        """Adiciona um item ao carrinho e finaliza a compra pela interface."""
+        # Arrange
+        for product_id in range(1, 7):
+            page.request.delete(f"{self.BASE_URL}/cart/remove/{product_id}")
+        page.request.delete(f"{self.BASE_URL}/cart/coupon")
+
+        # Act
+        page.goto(f"{self.BASE_URL}/", wait_until="domcontentloaded")
+        expect(page.get_by_text("Ofertas do dia")).to_be_visible()
+
+        page.get_by_test_id("add-product-1").click()
+        expect(page.get_by_test_id("cart-count")).to_have_text("1")
+
+        page.get_by_test_id("cart-link").click()
+        expect(page.get_by_text("Seu Carrinho")).to_be_visible()
+        expect(page.get_by_text("iPhone 13 128GB")).to_be_visible()
+
+        page.get_by_test_id("checkout-link").click()
+        expect(page.get_by_text("Finalizar pedido")).to_be_visible()
+        expect(page.get_by_test_id("checkout-form")).to_be_visible()
+
+        page.get_by_label("Nome completo").fill("Geo Carlos")
+        page.get_by_label("E-mail").fill("geo@example.com")
+        page.get_by_label("Endereço de entrega").fill("Rua Central, 100 - Sao Paulo")
+        page.get_by_label("Forma de pagamento").select_option("pix")
+        page.get_by_test_id("confirm-order-button").click()
+
+        # Assert
+        confirmation = page.get_by_test_id("order-confirmation")
+        expect(confirmation).to_contain_text("Compra concluída com sucesso")
+        expect(confirmation).to_contain_text("Geo Carlos")
+        expect(page.get_by_text("Pedido confirmado")).to_be_visible()
 
 
 class TestE2EHomePageInteraction:

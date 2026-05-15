@@ -57,6 +57,7 @@
             <button
               type="button"
               onclick="addProductToCart({{ product.id }}, '{{ product.name|replace("'", "") }}')"
+              data-testid="add-product-{{ product.id }}"
               class="w-full text-center bg-primary hover:bg-red-700 text-white text-sm font-semibold py-2 rounded-lg transition-colors"
             >
               Adicionar
